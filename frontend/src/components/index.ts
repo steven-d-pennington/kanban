@@ -7,3 +7,5 @@ export { WorkItemDetail } from './WorkItemDetail';
 export { CreateItemModal } from './CreateItemModal';
 export { AgentStatusBar } from './AgentStatusBar';
 export { AgentWorkflowDiagram } from './AgentWorkflowDiagram';
+export { AuthWrapper } from './AuthWrapper';
+export { UserMenu } from './UserMenu';
