@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { ITEM_TYPE_CONFIG, PRIORITY_CONFIG, AGENT_CONFIG } from '../types';
@@ -9,7 +10,9 @@ interface WorkItemCardProps {
   item: WorkItem;
 }
 
-export function WorkItemCard({ item }: WorkItemCardProps) {
+// Memoized WorkItemCard component for performance optimization
+// Only re-renders when the work item's key properties change
+export const WorkItemCard = memo(function WorkItemCard({ item }: WorkItemCardProps) {
   const { setSelectedWorkItem } = useKanbanStore();
   const typeConfig = ITEM_TYPE_CONFIG[item.type];
   const priorityConfig = PRIORITY_CONFIG[item.priority];
@@ -130,4 +133,22 @@ export function WorkItemCard({ item }: WorkItemCardProps) {
       )}
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  // Custom comparison for efficient memoization
+  // Only re-render if these key properties change
+  const prev = prevProps.item;
+  const next = nextProps.item;
+  return (
+    prev.id === next.id &&
+    prev.title === next.title &&
+    prev.description === next.description &&
+    prev.type === next.type &&
+    prev.priority === next.priority &&
+    prev.status === next.status &&
+    prev.assignedAgent === next.assignedAgent &&
+    prev.assignedTo === next.assignedTo &&
+    prev.storyPoints === next.storyPoints &&
+    prev.updatedAt === next.updatedAt &&
+    JSON.stringify(prev.labels) === JSON.stringify(next.labels)
+  );
+});
