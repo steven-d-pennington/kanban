@@ -36,14 +36,87 @@ export interface Project {
   updatedAt: string;
 }
 
+export type AgentAction =
+  | 'claimed'
+  | 'processing'
+  | 'completed'
+  | 'handed_off'
+  | 'failed'
+  | 'released'
+  | 'escalated'
+  | 'retrying'
+  | 'waiting'
+  | 'started'
+  | 'paused'
+  | 'resumed';
+
+export type AgentActivityStatus = 'success' | 'error' | 'warning';
+
 export interface AgentActivity {
   id: string;
   workItemId: string;
+  workItemTitle?: string;
+  workItemType?: WorkItemType;
   agentType: AgentType;
   agentInstanceId: string;
-  action: 'claimed' | 'processing' | 'completed' | 'handed_off' | 'failed';
+  agentDisplayName?: string;
+  action: AgentAction;
   details: Record<string, unknown>;
+  durationMs?: number;
+  status: AgentActivityStatus;
+  errorMessage?: string;
+  inputData?: Record<string, unknown>;
+  outputData?: Record<string, unknown>;
   createdAt: string;
+  projectId?: string;
+  projectName?: string;
+}
+
+export interface AgentInstance {
+  id: string;
+  agentType: NonNullable<AgentType>;
+  displayName: string;
+  status: 'active' | 'inactive' | 'error';
+  lastSeenAt: string;
+  createdAt: string;
+}
+
+export interface HandoffRule {
+  id: string;
+  sourceType: WorkItemType;
+  processedBy: NonNullable<AgentType>;
+  outputType: string;
+  createsTypes: WorkItemType[];
+  validationRules: Record<string, unknown>;
+  isActive: boolean;
+}
+
+export interface HandoffHistory {
+  id: string;
+  sourceWorkItemId: string;
+  targetWorkItemIds: string[];
+  fromAgentType: NonNullable<AgentType>;
+  fromAgentInstance: string;
+  toAgentType?: NonNullable<AgentType>;
+  outputData?: Record<string, unknown>;
+  validationPassed: boolean;
+  validationErrors?: string[];
+  handoffStatus: 'completed' | 'failed' | 'rolled_back';
+  createdAt: string;
+}
+
+export interface ClaimedItem {
+  id: string;
+  title: string;
+  type: WorkItemType;
+  priority: Priority;
+  assignedAgent: NonNullable<AgentType>;
+  claimedByInstance: string;
+  claimedAt: string;
+  startedAt: string;
+  projectId: string;
+  projectName: string;
+  claimedMinutesAgo: number;
 }
 
 export interface Comment {
@@ -101,4 +174,25 @@ export const AGENT_CONFIG: Record<NonNullable<AgentType>, { label: string; color
   project_manager: { label: 'PM Agent', color: 'text-violet-700', bgColor: 'bg-violet-100' },
   scrum_master: { label: 'SM Agent', color: 'text-cyan-700', bgColor: 'bg-cyan-100' },
   developer: { label: 'Dev Agent', color: 'text-emerald-700', bgColor: 'bg-emerald-100' },
+};
+
+export const AGENT_ACTION_CONFIG: Record<AgentAction, { label: string; color: string; icon: string }> = {
+  claimed: { label: 'Claimed', color: 'text-blue-600', icon: '🎯' },
+  processing: { label: 'Processing', color: 'text-yellow-600', icon: '⚙️' },
+  completed: { label: 'Completed', color: 'text-green-600', icon: '✅' },
+  handed_off: { label: 'Handed Off', color: 'text-purple-600', icon: '🤝' },
+  failed: { label: 'Failed', color: 'text-red-600', icon: '❌' },
+  released: { label: 'Released', color: 'text-gray-600', icon: '🔓' },
+  escalated: { label: 'Escalated', color: 'text-orange-600', icon: '⚠️' },
+  retrying: { label: 'Retrying', color: 'text-yellow-500', icon: '🔄' },
+  waiting: { label: 'Waiting', color: 'text-gray-500', icon: '⏳' },
+  started: { label: 'Started', color: 'text-blue-500', icon: '▶️' },
+  paused: { label: 'Paused', color: 'text-gray-400', icon: '⏸️' },
+  resumed: { label: 'Resumed', color: 'text-blue-400', icon: '▶️' },
+};
+
+export const AGENT_STATUS_CONFIG: Record<AgentActivityStatus, { label: string; color: string; bgColor: string }> = {
+  success: { label: 'Success', color: 'text-green-700', bgColor: 'bg-green-100' },
+  error: { label: 'Error', color: 'text-red-700', bgColor: 'bg-red-100' },
+  warning: { label: 'Warning', color: 'text-yellow-700', bgColor: 'bg-yellow-100' },
 };

@@ -4,10 +4,11 @@
 Implement atomic claim and release mechanisms for agents to take ownership of work items and prevent conflicts.
 
 ## Status
-**Current**: BACKLOG
+**Current**: COMPLETED
 **Phase**: 3 - Agent Integration
 **Priority**: HIGH
 **Estimated Effort**: Medium
+**Completed**: December 1, 2024
 
 ---
 
@@ -18,14 +19,33 @@ As an AI agent, I want to claim work items atomically so that no two agents proc
 
 ## Acceptance Criteria
 
-- [ ] Atomic claim operation (prevents race conditions)
-- [ ] Claim timeout/expiration (auto-release stale claims)
-- [ ] Manual release operation
-- [ ] View currently claimed items by agent
-- [ ] Claim queue for high-demand items
-- [ ] Notifications when items become claimable
-- [ ] Claim history tracking
-- [ ] Admin override to force-release items
+- [x] Atomic claim operation (prevents race conditions)
+- [x] Claim timeout/expiration (auto-release stale claims)
+- [x] Manual release operation
+- [x] View currently claimed items by agent
+- [x] Claim queue for high-demand items
+- [x] Notifications when items become claimable
+- [x] Claim history tracking
+- [x] Admin override to force-release items
+
+## Implementation Summary
+
+**Database Changes** (`supabase/migrations/002_agent_integration.sql`):
+- Added `release_stale_claims()` function for auto-releasing stale claims
+- Added `force_release_work_item()` function for admin override
+- Created `agent_claimed_items` view for monitoring claimed items
+- Enhanced claim/release functions with activity logging
+
+**Agent SDK** (`agent/lib/workItems.ts`):
+- `claimItem()`: Atomic claim with rate limiting
+- `releaseItem()`: Release with reason tracking
+- `claimNextItem()`: Retry logic for claiming
+- `getClaimedItems()`: View items claimed by this agent
+
+**Frontend** (`frontend/src/components/AgentInstancesPanel.tsx`):
+- Currently claimed items display with stale claim warnings
+- Force release functionality for admins
+- Real-time updates on claimed items
 
 ---
 
