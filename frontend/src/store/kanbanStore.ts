@@ -25,6 +25,7 @@ interface KanbanState {
   updateWorkItem: (id: string, updates: Partial<WorkItem>) => void;
   deleteWorkItem: (id: string) => void;
   duplicateWorkItem: (id: string) => WorkItem | null;
+  reorderWorkItems: (status: Status, orderedIds: string[]) => void;
   getFilteredItems: () => WorkItem[];
   getItemsByStatus: (status: Status) => WorkItem[];
 }
@@ -122,6 +123,21 @@ export const useKanbanStore = create<KanbanState>((set, get) => ({
     return newItem;
   },
 
+  reorderWorkItems: (status, orderedIds) => {
+    set((state) => ({
+      workItems: state.workItems.map((item) => {
+        if (item.status !== status) return item;
+        const newOrder = orderedIds.indexOf(item.id);
+        if (newOrder === -1) return item;
+        return {
+          ...item,
+          columnOrder: newOrder,
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+    }));
+  },
+
   getFilteredItems: () => {
     const state = get();
     return state.workItems.filter((item) => {
@@ -137,6 +153,9 @@ export const useKanbanStore = create<KanbanState>((set, get) => ({
   },
 
   getItemsByStatus: (status) => {
-    return get().getFilteredItems().filter((item) => item.status === status);
+    return get()
+      .getFilteredItems()
+      .filter((item) => item.status === status)
+      .sort((a, b) => a.columnOrder - b.columnOrder);
   },
 }));
