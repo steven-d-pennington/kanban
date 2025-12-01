@@ -6,6 +6,7 @@ import { KanbanBoard } from './components/KanbanBoard';
 import { AgentStatusBar } from './components/AgentStatusBar';
 import { CreateItemModal } from './components/CreateItemModal';
 import { WorkItemDetail } from './components/WorkItemDetail';
+import { ToastContainer } from './components/Toast';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <AgentStatusBar />
         <CreateItemModal />
         <WorkItemDetail />
+        <ToastContainer />
       </div>
     </AuthWrapper>
   );

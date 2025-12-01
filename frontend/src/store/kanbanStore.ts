@@ -23,6 +23,8 @@ interface KanbanState {
   moveWorkItem: (itemId: string, newStatus: Status) => void;
   addWorkItem: (item: Omit<WorkItem, 'id' | 'createdAt' | 'updatedAt' | 'columnOrder'>) => void;
   updateWorkItem: (id: string, updates: Partial<WorkItem>) => void;
+  deleteWorkItem: (id: string) => void;
+  duplicateWorkItem: (id: string) => WorkItem | null;
   getFilteredItems: () => WorkItem[];
   getItemsByStatus: (status: Status) => WorkItem[];
 }
@@ -82,7 +84,42 @@ export const useKanbanStore = create<KanbanState>((set, get) => ({
       workItems: state.workItems.map((item) =>
         item.id === id ? { ...item, ...updates, updatedAt: new Date().toISOString() } : item
       ),
+      // Also update selectedWorkItem if it's the one being updated
+      selectedWorkItem:
+        state.selectedWorkItem?.id === id
+          ? { ...state.selectedWorkItem, ...updates, updatedAt: new Date().toISOString() }
+          : state.selectedWorkItem,
     }));
+  },
+
+  deleteWorkItem: (id) => {
+    set((state) => ({
+      workItems: state.workItems.filter((item) => item.id !== id),
+      // Clear selection if the deleted item was selected
+      selectedWorkItem: state.selectedWorkItem?.id === id ? null : state.selectedWorkItem,
+    }));
+  },
+
+  duplicateWorkItem: (id) => {
+    const item = get().workItems.find((i) => i.id === id);
+    if (!item) return null;
+
+    const newItem: WorkItem = {
+      ...item,
+      id: `item-${Date.now()}`,
+      title: `${item.title} (Copy)`,
+      status: 'backlog',
+      columnOrder: get().workItems.filter((i) => i.status === 'backlog').length,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      startedAt: undefined,
+      completedAt: undefined,
+      assignedTo: undefined,
+      assignedAgent: undefined,
+    };
+
+    set((state) => ({ workItems: [...state.workItems, newItem] }));
+    return newItem;
   },
 
   getFilteredItems: () => {
