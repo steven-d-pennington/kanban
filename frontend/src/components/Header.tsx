@@ -1,10 +1,12 @@
 import { useKanbanStore } from '../store/kanbanStore';
 import { UserMenu } from './UserMenu';
-import { LayoutDashboard, Plus, Settings, ChevronDown, Bot } from 'lucide-react';
+import { ConnectionIndicator } from './ConnectionIndicator';
+import { PresenceAvatars } from './PresenceAvatars';
+import { ProjectSelector } from './ProjectSelector';
+import { Plus, Settings, Bot } from 'lucide-react';
 
 export function Header() {
-  const { projects, currentProjectId, setCreateModalOpen } = useKanbanStore();
-  const currentProject = projects.find((p) => p.id === currentProjectId);
+  const { setCreateModalOpen, setProjectSettingsOpen, currentProjectId } = useKanbanStore();
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3">
@@ -19,18 +21,19 @@ export function Header() {
           </div>
 
           {/* Project Selector */}
-          <div className="relative">
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
-              <LayoutDashboard className="w-4 h-4 text-gray-500" />
-              <span className="font-medium text-gray-700">{currentProject?.name || 'Select Project'}</span>
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            </button>
-            {/* Dropdown would go here */}
-          </div>
+          <ProjectSelector />
+
+          {/* Connection Status */}
+          <ConnectionIndicator />
         </div>
 
         {/* Right side actions */}
         <div className="flex items-center gap-3">
+          {/* Online Users */}
+          <PresenceAvatars />
+
+          <div className="w-px h-6 bg-gray-200" />
+
           <button
             onClick={() => setCreateModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -39,7 +42,12 @@ export function Header() {
             <span className="font-medium">New Item</span>
           </button>
 
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button
+            onClick={() => setProjectSettingsOpen(true)}
+            disabled={!currentProjectId}
+            className="p-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+            title="Project Settings"
+          >
             <Settings className="w-5 h-5 text-gray-500" />
           </button>
 
