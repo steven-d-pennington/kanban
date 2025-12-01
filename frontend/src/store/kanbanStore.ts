@@ -9,12 +9,19 @@ interface KanbanState {
   activeAgents: ActiveAgent[];
   selectedWorkItem: WorkItem | null;
   isCreateModalOpen: boolean;
+  isCreateProjectModalOpen: boolean;
+  isProjectSettingsOpen: boolean;
   filterType: WorkItemType | 'all';
   filterPriority: Priority | 'all';
   filterAssignee: string | 'all';
 
   // Actions
   setCurrentProject: (projectId: string) => void;
+  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Project;
+  updateProject: (id: string, updates: Partial<Project>) => void;
+  deleteProject: (id: string) => void;
+  setCreateProjectModalOpen: (open: boolean) => void;
+  setProjectSettingsOpen: (open: boolean) => void;
   setSelectedWorkItem: (item: WorkItem | null) => void;
   setCreateModalOpen: (open: boolean) => void;
   setFilterType: (type: WorkItemType | 'all') => void;
@@ -37,11 +44,54 @@ export const useKanbanStore = create<KanbanState>((set, get) => ({
   activeAgents: mockActiveAgents,
   selectedWorkItem: null,
   isCreateModalOpen: false,
+  isCreateProjectModalOpen: false,
+  isProjectSettingsOpen: false,
   filterType: 'all',
   filterPriority: 'all',
   filterAssignee: 'all',
 
   setCurrentProject: (projectId) => set({ currentProjectId: projectId }),
+
+  addProject: (projectData) => {
+    const newProject: Project = {
+      ...projectData,
+      id: `project-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    set((state) => ({
+      projects: [...state.projects, newProject],
+      currentProjectId: newProject.id,
+    }));
+    return newProject;
+  },
+
+  updateProject: (id, updates) => {
+    set((state) => ({
+      projects: state.projects.map((project) =>
+        project.id === id
+          ? { ...project, ...updates, updatedAt: new Date().toISOString() }
+          : project
+      ),
+    }));
+  },
+
+  deleteProject: (id) => {
+    const state = get();
+    const remainingProjects = state.projects.filter((p) => p.id !== id);
+    set({
+      projects: remainingProjects,
+      currentProjectId:
+        state.currentProjectId === id
+          ? remainingProjects[0]?.id || null
+          : state.currentProjectId,
+      workItems: state.workItems.filter((item) => item.projectId !== id),
+    });
+  },
+
+  setCreateProjectModalOpen: (open) => set({ isCreateProjectModalOpen: open }),
+
+  setProjectSettingsOpen: (open) => set({ isProjectSettingsOpen: open }),
 
   setSelectedWorkItem: (item) => set({ selectedWorkItem: item }),
 

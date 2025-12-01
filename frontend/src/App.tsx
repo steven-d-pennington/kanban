@@ -5,6 +5,8 @@ import { Filters } from './components/Filters';
 import { KanbanBoard } from './components/KanbanBoard';
 import { AgentStatusBar } from './components/AgentStatusBar';
 import { CreateItemModal } from './components/CreateItemModal';
+import { CreateProjectModal } from './components/CreateProjectModal';
+import { ProjectSettingsModal } from './components/ProjectSettingsModal';
 import { WorkItemDetail } from './components/WorkItemDetail';
 import { ToastContainer } from './components/Toast';
 
@@ -17,6 +19,8 @@ function App() {
         <KanbanBoard />
         <AgentStatusBar />
         <CreateItemModal />
+        <CreateProjectModal />
+        <ProjectSettingsModal />
         <WorkItemDetail />
         <ToastContainer />
       </div>
