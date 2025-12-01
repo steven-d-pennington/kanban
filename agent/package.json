@@ -1,14 +1,18 @@
 {
   "name": "@agent-kanban/sdk",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "SDK for AI agents to interact with the Agent Kanban Board",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "start:pm": "node dist/agents/project-manager/run.js",
+    "start:sm": "node dist/agents/scrum-master/run.js",
+    "start:dev": "node dist/agents/developer/run.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
     "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
@@ -22,7 +26,10 @@
     "agent",
     "kanban",
     "ai",
-    "sdk"
+    "sdk",
+    "project-manager",
+    "scrum-master",
+    "developer"
   ],
   "license": "MIT"
 }
