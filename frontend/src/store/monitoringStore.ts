@@ -1,6 +1,54 @@
 import { create } from 'zustand';
 import type { AgentType, AgentAction } from '../types';
+import type { Database } from '../types/database';
 import { supabase } from '../lib/supabase';
+
+type AgentInstanceUpdate = Database['public']['Tables']['agent_instances']['Update'];
+
+// Database row types
+interface AgentInstanceRow {
+  id: string;
+  agent_type: string;
+  display_name: string;
+  status: string;
+  last_seen_at: string;
+  created_at: string;
+}
+
+interface WorkItemTaskRow {
+  id: string;
+  title: string;
+  started_at: string;
+}
+
+interface AgentActivityRow {
+  id: string;
+  status: string;
+  duration_ms: number | null;
+  created_at: string;
+}
+
+interface ActivityFeedRow {
+  id: string;
+  agent_instance_id: string;
+  agent_type: string;
+  action: string;
+  work_item_title: string | null;
+  status: string;
+  created_at: string;
+  duration_ms: number | null;
+  agent_display_name: string | null;
+  error_message: string | null;
+  work_item_id: string | null;
+}
+
+interface ClaimedItemRow {
+  id: string;
+  title: string;
+  claimed_minutes_ago: number;
+  claimed_by_instance: string;
+  claimed_at: string;
+}
 
 export interface AgentMetrics {
   tasksCompleted: number;
@@ -291,8 +339,11 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
         return;
       }
 
+      // supabase is guaranteed to be non-null here due to the check above
+      const sb = supabase;
+
       // Fetch agent instances with metrics
-      const { data: agentData, error: agentError } = await supabase
+      const { data: agentData, error: agentError } = await sb
         .from('agent_instances')
         .select('*')
         .order('last_seen_at', { ascending: false });
@@ -301,9 +352,9 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
       // Fetch metrics for each agent
       const enrichedAgents = await Promise.all(
-        (agentData || []).map(async (agent) => {
+        ((agentData || []) as AgentInstanceRow[]).map(async (agent) => {
           // Get current task if any
-          const { data: taskData } = await supabase
+          const { data: taskData } = await sb
             .from('work_items')
             .select('id, title, started_at')
             .eq('metadata->>claimed_by_instance', agent.id)
@@ -311,7 +362,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
             .single();
 
           // Get activity stats
-          const { data: activityStats } = await supabase
+          const { data: activityStats } = await sb
             .from('agent_activity')
             .select('id, status, duration_ms, created_at')
             .eq('agent_instance_id', agent.id);
@@ -319,7 +370,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
           const now = new Date();
           const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-          const activities = activityStats || [];
+          const activities = (activityStats || []) as AgentActivityRow[];
           const todayActivities = activities.filter(
             (a) => new Date(a.created_at) >= todayStart
           );
@@ -327,11 +378,12 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
           const successCount = activities.filter((a) => a.status === 'success').length;
           const totalDuration = activities.reduce((sum, a) => sum + (a.duration_ms || 0), 0);
 
-          const currentTask = taskData
+          const task = taskData as WorkItemTaskRow | null;
+          const currentTask = task
             ? {
-                id: taskData.id,
-                title: taskData.title,
-                startedAt: taskData.started_at,
+                id: task.id,
+                title: task.title,
+                startedAt: task.started_at,
               }
             : undefined;
 
@@ -379,15 +431,15 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
       if (error) throw error;
 
-      const activities: RecentActivity[] = (data || []).map((row) => ({
+      const activities: RecentActivity[] = ((data || []) as ActivityFeedRow[]).map((row) => ({
         id: row.id,
         agentId: row.agent_instance_id,
-        agentType: row.agent_type,
-        action: row.action,
-        workItemTitle: row.work_item_title,
-        status: row.status,
+        agentType: row.agent_type as NonNullable<AgentType>,
+        action: row.action as AgentAction,
+        workItemTitle: row.work_item_title ?? undefined,
+        status: row.status as 'success' | 'error' | 'warning',
         timestamp: row.created_at,
-        durationMs: row.duration_ms,
+        durationMs: row.duration_ms ?? undefined,
       }));
 
       set({ recentActivities: activities });
@@ -419,20 +471,20 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
       const alerts: SystemAlert[] = [];
 
-      (errorData || []).forEach((row) => {
+      ((errorData || []) as ActivityFeedRow[]).forEach((row) => {
         alerts.push({
           id: `error-${row.id}`,
           type: 'error',
           title: 'Task Failed',
           message: `${row.agent_display_name || row.agent_instance_id} failed: ${row.error_message || 'Unknown error'}`,
           agentId: row.agent_instance_id,
-          workItemId: row.work_item_id,
+          workItemId: row.work_item_id ?? undefined,
           timestamp: row.created_at,
           acknowledged: false,
         });
       });
 
-      (staleData || []).forEach((row) => {
+      ((staleData || []) as ClaimedItemRow[]).forEach((row) => {
         alerts.push({
           id: `stale-${row.id}`,
           type: 'warning',
@@ -473,9 +525,10 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
 
       // In real implementation, this would send a signal to the agent
       // For now, we just update the status
+      const updateData: AgentInstanceUpdate = { status: 'inactive' };
       const { error } = await supabase
         .from('agent_instances')
-        .update({ status: 'inactive' })
+        .update(updateData as never)
         .eq('id', agentId);
 
       if (error) throw error;
@@ -499,9 +552,10 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
         return true;
       }
 
+      const updateData: AgentInstanceUpdate = { status: 'active' };
       const { error } = await supabase
         .from('agent_instances')
-        .update({ status: 'active' })
+        .update(updateData as never)
         .eq('id', agentId);
 
       if (error) throw error;
@@ -522,7 +576,9 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       return () => clearInterval(interval);
     }
 
-    const channel = supabase
+    // Capture supabase reference for closure
+    const sb = supabase;
+    const channel = sb
       .channel('monitoring-updates')
       .on(
         'postgres_changes',
@@ -548,7 +604,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      sb.removeChannel(channel);
     };
   },
 

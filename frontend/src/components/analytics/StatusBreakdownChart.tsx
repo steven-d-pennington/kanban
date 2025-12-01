@@ -23,8 +23,6 @@ const statusLabels: Record<string, string> = {
 };
 
 export function StatusBreakdownChart({ data }: StatusBreakdownChartProps) {
-  const totalCount = data.reduce((sum, d) => sum + d.count, 0);
-
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
       <div className="border-b border-gray-200 px-4 py-3">

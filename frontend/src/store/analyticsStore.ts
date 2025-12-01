@@ -2,6 +2,30 @@ import { create } from 'zustand';
 import type { WorkItem, Status, WorkItemType, AgentType } from '../types';
 import { supabase } from '../lib/supabase';
 
+// Database row type for work_items table
+interface WorkItemRow {
+  id: string;
+  project_id: string;
+  parent_id: string | null;
+  title: string;
+  description: string | null;
+  type: string;
+  priority: string;
+  status: string;
+  column_order: number;
+  assigned_to: string | null;
+  assigned_agent: string | null;
+  story_points: number | null;
+  due_date: string | null;
+  labels: string[] | null;
+  metadata: Record<string, unknown> | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
 export interface DateRange {
   start: Date;
   end: Date;
@@ -361,27 +385,27 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
       if (error) throw error;
 
       // Map database fields to WorkItem type
-      const workItems: WorkItem[] = (items || []).map((row) => ({
+      const workItems: WorkItem[] = ((items || []) as WorkItemRow[]).map((row) => ({
         id: row.id,
         projectId: row.project_id,
-        parentId: row.parent_id,
+        parentId: row.parent_id ?? undefined,
         title: row.title,
         description: row.description || '',
-        type: row.type,
-        priority: row.priority,
-        status: row.status,
+        type: row.type as WorkItemType,
+        priority: row.priority as WorkItem['priority'],
+        status: row.status as Status,
         columnOrder: row.column_order,
-        assignedTo: row.assigned_to,
-        assignedAgent: row.assigned_agent,
-        storyPoints: row.story_points,
-        dueDate: row.due_date,
+        assignedTo: row.assigned_to ?? undefined,
+        assignedAgent: row.assigned_agent as AgentType,
+        storyPoints: row.story_points ?? undefined,
+        dueDate: row.due_date ?? undefined,
         labels: row.labels || [],
         metadata: row.metadata || {},
-        createdBy: row.created_by,
+        createdBy: row.created_by ?? '',
         createdAt: row.created_at,
         updatedAt: row.updated_at,
-        startedAt: row.started_at,
-        completedAt: row.completed_at,
+        startedAt: row.started_at ?? undefined,
+        completedAt: row.completed_at ?? undefined,
       }));
 
       const metrics = calculateMetrics(workItems, dateRange);
@@ -415,15 +439,16 @@ export const useAnalyticsStore = create<AnalyticsState>((set, get) => ({
 
       if (error) throw error;
 
-      const bottlenecks: BottleneckItem[] = (data || [])
+      type BottleneckRow = Pick<WorkItemRow, 'id' | 'title' | 'status' | 'updated_at' | 'assigned_to' | 'assigned_agent'>;
+      const bottlenecks: BottleneckItem[] = ((data || []) as BottleneckRow[])
         .map((row) => ({
           id: row.id,
           title: row.title,
           status: row.status as Status,
           hoursInStatus:
             (Date.now() - new Date(row.updated_at).getTime()) / (1000 * 60 * 60),
-          assignedTo: row.assigned_to,
-          assignedAgent: row.assigned_agent,
+          assignedTo: row.assigned_to ?? undefined,
+          assignedAgent: row.assigned_agent as AgentType,
         }))
         .filter((item) => item.hoursInStatus > 24); // Only show items stuck for > 24 hours
 

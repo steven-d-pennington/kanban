@@ -167,9 +167,58 @@ export interface Database {
           updated_at?: string;
         };
       };
+      agent_instances: {
+        Row: {
+          id: string;
+          agent_type: string;
+          display_name: string;
+          status: string;
+          last_seen_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          agent_type: string;
+          display_name: string;
+          status?: string;
+          last_seen_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          agent_type?: string;
+          display_name?: string;
+          status?: string;
+          last_seen_at?: string;
+          created_at?: string;
+        };
+      };
     };
     Views: {
-      [_ in never]: never;
+      agent_activity_feed: {
+        Row: {
+          id: string;
+          agent_instance_id: string;
+          agent_type: string;
+          action: string;
+          work_item_title: string | null;
+          status: string;
+          created_at: string;
+          duration_ms: number | null;
+          agent_display_name: string | null;
+          error_message: string | null;
+          work_item_id: string | null;
+        };
+      };
+      agent_claimed_items: {
+        Row: {
+          id: string;
+          title: string;
+          claimed_minutes_ago: number;
+          claimed_by_instance: string;
+          claimed_at: string;
+        };
+      };
     };
     Functions: {
       [_ in never]: never;
