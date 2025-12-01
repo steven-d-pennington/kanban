@@ -220,7 +220,6 @@ export async function createChildItems(
           ...child.metadata,
           created_by_agent: AGENT_TYPE,
         },
-        created_by: parentItem.created_by,
       })
       .select('id')
       .single();

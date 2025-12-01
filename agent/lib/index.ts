@@ -92,3 +92,44 @@ export {
   type HandoffResult,
   type HandoffRule,
 } from './handoff';
+
+// Shared agent infrastructure
+export {
+  AgentBase,
+  type ProcessResult,
+  type PollingConfig,
+  type ProjectContext,
+  type ValidationResult,
+  type AgentProcessor,
+} from './shared';
+
+// Agent implementations
+export {
+  // Project Manager Agent
+  ProjectManagerAgent,
+  generatePRD,
+  formatPRD,
+  type PRDInput,
+  type PRDOutput,
+  // Scrum Master Agent
+  ScrumMasterAgent,
+  generateStories,
+  formatStory,
+  prioritizeStories,
+  type StoryOutput,
+  type StoryGenInput,
+  type StoryPriority,
+  type StoryPoints,
+  // Developer Agent
+  DeveloperAgent,
+  CodebaseAnalyzer,
+  ImplementationPlanner,
+  CodeGenerator,
+  PRCreator,
+  type ImplementationPlan,
+  type CodeChanges,
+  type FileChange,
+  type PlanStep,
+  type CodebaseContext,
+  type PRResult,
+} from './agents';
