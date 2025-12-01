@@ -1,5 +1,6 @@
 import { useKanbanStore } from '../store/kanbanStore';
-import { LayoutDashboard, Plus, Settings, User, ChevronDown, Bot } from 'lucide-react';
+import { UserMenu } from './UserMenu';
+import { LayoutDashboard, Plus, Settings, ChevronDown, Bot } from 'lucide-react';
 
 export function Header() {
   const { projects, currentProjectId, setCreateModalOpen } = useKanbanStore();
@@ -44,11 +45,7 @@ export function Header() {
 
           <div className="w-px h-6 bg-gray-200" />
 
-          <button className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
-          </button>
+          <UserMenu />
         </div>
       </div>
     </header>
