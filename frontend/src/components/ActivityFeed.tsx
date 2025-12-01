@@ -119,7 +119,7 @@ function ActivityItem({ activity, compact }: { activity: AgentActivity; compact?
 }
 
 export function ActivityFeed({ projectId, workItemId, limit = 50, compact = false }: ActivityFeedProps) {
-  const { activities, loading, error, fetchActivities, subscribeToActivities, setFilters } =
+  const { activities, loading, error, fetchActivities, subscribeToActivities } =
     useAgentActivityStore();
 
   useEffect(() => {

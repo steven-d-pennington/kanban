@@ -325,7 +325,7 @@ export const useAgentActivityStore = create<AgentActivityState>((set, get) => ({
         },
         async (payload) => {
           // Fetch the full activity with joined data
-          const { data } = await supabase
+          const { data } = await supabase!
             .from('agent_activity_feed')
             .select('*')
             .eq('id', payload.new.id)
@@ -345,7 +345,7 @@ export const useAgentActivityStore = create<AgentActivityState>((set, get) => ({
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase!.removeChannel(channel);
     };
   },
 
@@ -359,10 +359,10 @@ export const useAgentActivityStore = create<AgentActivityState>((set, get) => ({
         return true;
       }
 
-      const { error } = await supabase.rpc('force_release_work_item', {
+      const { error } = await supabase.rpc('force_release_work_item' as never, {
         p_work_item_id: workItemId,
         p_reason: reason,
-      });
+      } as never);
 
       if (error) throw error;
 
@@ -389,9 +389,9 @@ export const useAgentActivityStore = create<AgentActivityState>((set, get) => ({
         return true;
       }
 
-      const { error } = await supabase.rpc('deactivate_agent_instance', {
+      const { error } = await supabase.rpc('deactivate_agent_instance' as never, {
         p_instance_id: instanceId,
-      });
+      } as never);
 
       if (error) throw error;
 
