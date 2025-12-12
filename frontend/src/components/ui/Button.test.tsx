@@ -340,3 +340,92 @@ describe('Button Accessibility Tests', () => {
             if (prop === 'color') return 'rgb(255, 255, 255)'; // white
           } else {
             // Default state: white background with dark text
+            if (prop === 'background-color') return 'rgb(255, 255, 255)'; // white
+            if (prop === 'color') return 'rgb(15, 23, 42)'; // slate-900
+          }
+          return '';
+        }
+      }));
+      (calculateContrastRatio as any).mockReturnValue(15.2); // Good hover contrast
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button variant="outline">Outline Hover Test</Button>);
+      const button = screen.getByRole('button');
+      
+      await user.hover(button);
+
+      // Assert
+      expect(calculateContrastRatio).toHaveBeenCalledWith(
+        { r: 1, g: 1, b: 1 }, // white text on hover
+        { r: 15/255, g: 23/255, b: 42/255 } // slate-900 background on hover
+      );
+      expect(isWCAGCompliant).toHaveBeenCalledWith(15.2, WCAG_AA_NORMAL);
+    });
+  });
+
+  describe('Disabled State Contrast Testing', () => {
+    it('should handle disabled state contrast appropriately', () => {
+      // Arrange
+      mockGetComputedStyle.mockImplementation(() => ({
+        getPropertyValue: (prop: string) => {
+          if (prop === 'background-color') return 'rgb(148, 163, 184)'; // slate-400
+          if (prop === 'color') return 'rgb(100, 116, 139)'; // slate-500
+          return '';
+        }
+      }));
+      (calculateContrastRatio as any).mockReturnValue(1.8); // Low contrast for disabled
+      (isWCAGCompliant as any).mockReturnValue(false);
+
+      // Act
+      render(<Button disabled>Disabled Button</Button>);
+      const button = screen.getByRole('button');
+
+      // Assert
+      expect(button).toBeDisabled();
+      expect(calculateContrastRatio).toHaveBeenCalledWith(
+        { r: 100/255, g: 116/255, b: 139/255 }, // slate-500 text
+        { r: 148/255, g: 163/255, b: 184/255 } // slate-400 background
+      );
+    });
+  });
+
+  describe('Focus State Accessibility', () => {
+    it('should have visible focus indicator', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      render(<Button>Focus Test</Button>);
+      const button = screen.getByRole('button');
+
+      // Act
+      await user.tab();
+
+      // Assert
+      expect(button).toHaveFocus();
+      expect(button).toHaveClass('focus-visible:ring-2');
+    });
+
+    it('should maintain contrast in focus state', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      mockGetComputedStyle.mockImplementation(() => ({
+        getPropertyValue: (prop: string) => {
+          if (prop === 'background-color') return 'rgb(15, 23, 42)'; // slate-900
+          if (prop === 'color') return 'rgb(255, 255, 255)'; // white
+          return '';
+        }
+      }));
+      (calculateContrastRatio as any).mockReturnValue(15.2);
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button>Focus Contrast Test</Button>);
+      const button = screen.getByRole('button');
+      await user.tab();
+
+      // Assert
+      expect(button).toHaveFocus();
+      expect(isWCAGCompliant).toHaveBeenCalledWith(15.2, WCAG_AA_NORMAL);
+    });
+  });
+});
