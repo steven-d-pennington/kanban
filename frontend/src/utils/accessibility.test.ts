@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { 
   calculateContrastRatio,
   getRelativeLuminance,
@@ -21,6 +21,10 @@ vi.mock('colorjs.io/fn', () => ({
 }));
 
 describe('accessibility utils', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('getRelativeLuminance', () => {
     it('should calculate correct luminance for white', () => {
       const result = getRelativeLuminance('#ffffff');
@@ -152,9 +156,11 @@ describe('accessibility utils', () => {
 
     it('should handle edge cases at exact thresholds', () => {
       // Mock a color combination that gives exactly 4.5:1 ratio
-      vi.spyOn(global, 'calculateContrastRatio').mockReturnValue(4.5);
+      const mockCalculateContrastRatio = vi.fn().mockReturnValue(4.5);
+      vi.stubGlobal('calculateContrastRatio', mockCalculateContrastRatio);
       const result = isWCAGCompliant('#mock1', '#mock2', 'AA', 'normal');
       expect(result).toBe(true);
+      vi.unstubAllGlobals();
     });
 
     it('should default to AA normal when parameters not specified', () => {
@@ -179,24 +185,30 @@ describe('accessibility utils', () => {
 
     it('should return AA for moderate contrast combinations', () => {
       // Mock a ratio between AA and AAA thresholds
-      vi.spyOn(global, 'calculateContrastRatio').mockReturnValue(5.5);
+      const mockCalculateContrastRatio = vi.fn().mockReturnValue(5.5);
+      vi.stubGlobal('calculateContrastRatio', mockCalculateContrastRatio);
       const level = getAccessibilityLevel('#mock1', '#mock2', 'normal');
       expect(level).toBe('AA');
+      vi.unstubAllGlobals();
     });
 
     it('should return fail for low contrast combinations', () => {
-      vi.spyOn(global, 'calculateContrastRatio').mockReturnValue(2.0);
+      const mockCalculateContrastRatio = vi.fn().mockReturnValue(2.0);
+      vi.stubGlobal('calculateContrastRatio', mockCalculateContrastRatio);
       const level = getAccessibilityLevel('#mock1', '#mock2', 'normal');
       expect(level).toBe('fail');
+      vi.unstubAllGlobals();
     });
 
     it('should have different thresholds for large text', () => {
-      vi.spyOn(global, 'calculateContrastRatio').mockReturnValue(4.0);
+      const mockCalculateContrastRatio = vi.fn().mockReturnValue(4.0);
+      vi.stubGlobal('calculateContrastRatio', mockCalculateContrastRatio);
       const normalLevel = getAccessibilityLevel('#mock1', '#mock2', 'normal');
       const largeLevel = getAccessibilityLevel('#mock1', '#mock2', 'large');
       
       expect(normalLevel).toBe('fail');
       expect(largeLevel).toBe('AA');
+      vi.unstubAllGlobals();
     });
 
     it('should default to normal text size', () => {
@@ -367,4 +379,53 @@ describe('accessibility utils', () => {
   });
 
   describe('integration tests', () => {
-    it('should handle complete workflow for
+    it('should handle complete workflow for color accessibility validation', () => {
+      const textColor = '#666666';
+      const backgroundColor = '#ffffff';
+      
+      // Validate the combination
+      const validation = validateColorCombination(textColor, backgroundColor);
+      expect(validation).toBeDefined();
+      
+      // If not compliant, get suggestions
+      if (!validation.isValid) {
+        const suggestions = suggestAccessibleAlternatives(textColor, backgroundColor);
+        expect(suggestions.length).toBeGreaterThan(0);
+        
+        // Test the first suggestion
+        const firstSuggestion = suggestions[0];
+        const newValidation = validateColorCombination(
+          firstSuggestion.type === 'text' ? firstSuggestion.color : textColor,
+          firstSuggestion.type === 'background' ? firstSuggestion.color : backgroundColor
+        );
+        expect(newValidation.isValid).toBe(true);
+      }
+    });
+
+    it('should provide consistent results across different functions', () => {
+      const textColor = '#000000';
+      const backgroundColor = '#ffffff';
+      
+      const contrastRatio = calculateContrastRatio(textColor, backgroundColor);
+      const isCompliant = isWCAGCompliant(textColor, backgroundColor, 'AA', 'normal');
+      const accessibilityLevel = getAccessibilityLevel(textColor, backgroundColor, 'normal');
+      const validation = validateColorCombination(textColor, backgroundColor);
+      
+      expect(validation.contrastRatio).toBe(contrastRatio);
+      expect(validation.isValid).toBe(isCompliant);
+      expect(validation.wcagLevel).toBe(accessibilityLevel);
+    });
+
+    it('should handle error cases gracefully in the full workflow', () => {
+      const invalidColor = 'invalid-color';
+      const validColor = '#ffffff';
+      
+      const validation = validateColorCombination(invalidColor, validColor);
+      expect(validation.isValid).toBe(false);
+      expect(validation.issues).toContain('Invalid color format');
+      
+      const suggestions = suggestAccessibleAlternatives(invalidColor, validColor);
+      expect(suggestions.length).toBe(0);
+    });
+  });
+});
