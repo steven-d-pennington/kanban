@@ -184,7 +184,7 @@ export function ActivityFilters() {
       <select
         value={filters.agentType || ''}
         onChange={(e) => setFilters({ agentType: e.target.value as AgentType || undefined })}
-        className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
         <option value="">All Agents</option>
         <option value="project_manager">PM Agent</option>
@@ -195,7 +195,7 @@ export function ActivityFilters() {
       <select
         value={filters.action || ''}
         onChange={(e) => setFilters({ action: e.target.value as AgentActivity['action'] || undefined })}
-        className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
         <option value="">All Actions</option>
         <option value="claimed">Claimed</option>
@@ -210,7 +210,7 @@ export function ActivityFilters() {
       <select
         value={filters.status || ''}
         onChange={(e) => setFilters({ status: e.target.value as AgentActivity['status'] || undefined })}
-        className="px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       >
         <option value="">All Statuses</option>
         <option value="success">Success</option>

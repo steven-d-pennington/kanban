@@ -20,7 +20,7 @@ export function AgentWorkflowDiagram() {
           </div>
         </div>
 
-        <ArrowRight className="w-6 h-6 text-gray-300 mt-6 flex-shrink-0" />
+        <ArrowRight className="w-6 h-6 text-gray-500 mt-6 flex-shrink-0" />
 
         {/* Step 2: PM Agent */}
         <div className="flex-1 text-center">
@@ -36,7 +36,7 @@ export function AgentWorkflowDiagram() {
           </div>
         </div>
 
-        <ArrowRight className="w-6 h-6 text-gray-300 mt-6 flex-shrink-0" />
+        <ArrowRight className="w-6 h-6 text-gray-500 mt-6 flex-shrink-0" />
 
         {/* Step 3: Scrum Master Agent */}
         <div className="flex-1 text-center">
@@ -52,7 +52,7 @@ export function AgentWorkflowDiagram() {
           </div>
         </div>
 
-        <ArrowRight className="w-6 h-6 text-gray-300 mt-6 flex-shrink-0" />
+        <ArrowRight className="w-6 h-6 text-gray-500 mt-6 flex-shrink-0" />
 
         {/* Step 4: Developer Agent */}
         <div className="flex-1 text-center">
@@ -68,7 +68,7 @@ export function AgentWorkflowDiagram() {
           </div>
         </div>
 
-        <ArrowRight className="w-6 h-6 text-gray-300 mt-6 flex-shrink-0" />
+        <ArrowRight className="w-6 h-6 text-gray-500 mt-6 flex-shrink-0" />
 
         {/* Step 5: Complete */}
         <div className="flex-1 text-center">

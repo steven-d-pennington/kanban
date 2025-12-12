@@ -32,7 +32,7 @@ export function Filters() {
       <select
         value={filterType}
         onChange={(e) => setFilterType(e.target.value as WorkItemType | 'all')}
-        className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-900 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option value="all">All Types</option>
         {Object.entries(ITEM_TYPE_CONFIG).map(([key, config]) => (
@@ -46,7 +46,7 @@ export function Filters() {
       <select
         value={filterPriority}
         onChange={(e) => setFilterPriority(e.target.value as Priority | 'all')}
-        className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-900 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option value="all">All Priorities</option>
         {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
@@ -60,7 +60,7 @@ export function Filters() {
       <select
         value={filterAssignee}
         onChange={(e) => setFilterAssignee(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-900 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option value="all">All Assignees</option>
         <option value="agent">Agent Only</option>

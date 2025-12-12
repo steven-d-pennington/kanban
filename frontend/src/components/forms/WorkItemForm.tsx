@@ -101,7 +101,7 @@ export function WorkItemForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter a clear, descriptive title"
-          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+          className={`w-full px-4 py-2 border rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
             errors.title ? 'border-red-500' : 'border-gray-200'
           }`}
           disabled={isSubmitting}
@@ -119,7 +119,7 @@ export function WorkItemForm({
             id="type"
             value={type}
             onChange={(e) => setType(e.target.value as WorkItemType)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isSubmitting}
           >
             {Object.entries(ITEM_TYPE_CONFIG).map(([key, config]) => (
@@ -138,7 +138,7 @@ export function WorkItemForm({
             id="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value as Priority)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isSubmitting}
           >
             {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
@@ -163,7 +163,7 @@ export function WorkItemForm({
             value={storyPoints}
             onChange={(e) => setStoryPoints(e.target.value)}
             placeholder="e.g., 3"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+            className={`w-full px-4 py-2 border rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
               errors.storyPoints ? 'border-red-500' : 'border-gray-200'
             }`}
             disabled={isSubmitting}
@@ -182,7 +182,7 @@ export function WorkItemForm({
             type="date"
             value={dueDate}
             onChange={(e) => setDueDate(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isSubmitting}
           />
         </div>
@@ -199,7 +199,7 @@ export function WorkItemForm({
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Provide detailed information about this work item. Supports markdown formatting."
           rows={6}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           disabled={isSubmitting}
         />
       </div>
@@ -215,7 +215,7 @@ export function WorkItemForm({
           value={labelsInput}
           onChange={(e) => setLabelsInput(e.target.value)}
           placeholder="Enter labels separated by commas (e.g., frontend, urgent, auth)"
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           disabled={isSubmitting}
         />
       </div>

@@ -49,7 +49,7 @@ export function AgentStatusBar() {
                       count.active > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-500'
                     }`}
                   />
-                  <span className="text-sm text-gray-300">{AGENT_CONFIG[agentType].label}</span>
+                  <span className="text-sm text-gray-100">{AGENT_CONFIG[agentType].label}</span>
                   <span className="text-sm font-medium">
                     {count.active}/{count.total}
                   </span>
@@ -63,20 +63,20 @@ export function AgentStatusBar() {
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Circle className="w-3 h-3 fill-green-400 text-green-400" />
-            <span className="text-sm text-gray-300">Processing:</span>
+            <span className="text-sm text-gray-100">Processing:</span>
             <span className="text-sm font-medium">{totalActive}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <Circle className="w-3 h-3 fill-gray-500 text-gray-500" />
-            <span className="text-sm text-gray-300">Idle:</span>
+            <span className="text-sm text-gray-100">Idle:</span>
             <span className="text-sm font-medium">{totalIdle}</span>
           </div>
 
           {totalError > 0 && (
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-red-400" />
-              <span className="text-sm text-gray-300">Errors:</span>
+              <span className="text-sm text-gray-100">Errors:</span>
               <span className="text-sm font-medium text-red-400">{totalError}</span>
             </div>
           )}

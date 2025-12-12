@@ -201,7 +201,7 @@ export function WorkItemDetail() {
                       moveWorkItem(selectedWorkItem.id, e.target.value as Status);
                       toast.info(`Moved to ${e.target.value.replace('_', ' ')}`);
                     }}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {COLUMNS.map((col) => (
                       <option key={col.id} value={col.id}>
@@ -392,7 +392,7 @@ export function WorkItemDetail() {
                       rows={2}
                       value={commentText}
                       onChange={(e) => setCommentText(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     />
                     <div className="mt-2 flex justify-end">
                       <button
