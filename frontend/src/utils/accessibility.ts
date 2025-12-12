@@ -1,311 +1,276 @@
-import { LCH, sRGB } from 'colorjs.io/fn';
-
-// WCAG AA compliance levels
-export const WCAG_AA_NORMAL = 4.5;
-export const WCAG_AA_LARGE = 3.0;
-export const WCAG_AAA_NORMAL = 7.0;
-export const WCAG_AAA_LARGE = 4.5;
-
-// Accessible color pairs for text on backgrounds
-export const ACCESSIBLE_COLOR_PAIRS = {
-  light: {
-    background: '#ffffff',
-    text: '#1a1a1a',
-    textSecondary: '#4a4a4a',
-    textMuted: '#6a6a6a',
-    primary: '#2563eb',
-    success: '#059669',
-    warning: '#d97706',
-    error: '#dc2626',
-  },
-  dark: {
-    background: '#1a1a1a',
-    text: '#ffffff',
-    textSecondary: '#d1d5db',
-    textMuted: '#9ca3af',
-    primary: '#60a5fa',
-    success: '#10b981',
-    warning: '#fbbf24',
-    error: '#f87171',
-  },
-} as const;
-
-export const HIGH_CONTRAST_PAIRS = {
-  light: {
-    background: '#ffffff',
-    text: '#000000',
-    primary: '#0066cc',
-    success: '#006600',
-    warning: '#cc6600',
-    error: '#cc0000',
-  },
-  dark: {
-    background: '#000000',
-    text: '#ffffff',
-    primary: '#3399ff',
-    success: '#00ff00',
-    warning: '#ffcc00',
-    error: '#ff3333',
-  },
-} as const;
+import { z } from 'zod';
 
 /**
- * Converts a hex color to RGB values
+ * Color schema for validation
  */
-export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16),
-      }
-    : null;
+const ColorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
+
+/**
+ * WCAG contrast level type
+ */
+export type ContrastLevel = 'AA' | 'AAA';
+
+/**
+ * RGB color interface
+ */
+export interface RGBColor {
+  r: number;
+  g: number;
+  b: number;
 }
 
 /**
- * Calculates the relative luminance of a color
- * Based on WCAG 2.1 specification
+ * Contrast ratio result interface
  */
-export function getRelativeLuminance(color: string): number {
-  const rgb = hexToRgb(color);
-  if (!rgb) return 0;
-
-  const { r, g, b } = rgb;
-
-  // Convert to 0-1 range
-  const [rs, gs, bs] = [r, g, b].map((c) => {
-    c = c / 255;
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-  });
-
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-}
-
-/**
- * Calculates the contrast ratio between two colors
- * Returns a value between 1 and 21
- */
-export function getContrastRatio(color1: string, color2: string): number {
-  const l1 = getRelativeLuminance(color1);
-  const l2 = getRelativeLuminance(color2);
-
-  const lighter = Math.max(l1, l2);
-  const darker = Math.min(l1, l2);
-
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-/**
- * Checks if color combination meets WCAG contrast requirements
- */
-export function meetsContrastRequirement(
-  foreground: string,
-  background: string,
-  level: 'AA' | 'AAA' = 'AA',
-  isLargeText = false
-): boolean {
-  const ratio = getContrastRatio(foreground, background);
-  
-  const thresholds = {
-    AA: isLargeText ? WCAG_AA_LARGE : WCAG_AA_NORMAL,
-    AAA: isLargeText ? WCAG_AAA_LARGE : WCAG_AAA_NORMAL,
-  };
-
-  return ratio >= thresholds[level];
-}
-
-/**
- * Gets the appropriate text color (black or white) for a given background
- */
-export function getContrastingTextColor(backgroundColor: string): string {
-  const whiteContrast = getContrastRatio('#ffffff', backgroundColor);
-  const blackContrast = getContrastRatio('#000000', backgroundColor);
-
-  return whiteContrast > blackContrast ? '#ffffff' : '#000000';
-}
-
-/**
- * Validates if a color is accessible for the given context
- */
-export function validateColorAccessibility(
-  foreground: string,
-  background: string,
-  options: {
-    level?: 'AA' | 'AAA';
-    isLargeText?: boolean;
-    minContrast?: number;
-  } = {}
-): {
+export interface ContrastResult {
+  ratio: number;
   isAccessible: boolean;
-  contrastRatio: number;
-  recommendation?: string;
-} {
-  const { level = 'AA', isLargeText = false, minContrast } = options;
-  const contrastRatio = getContrastRatio(foreground, background);
+  level: ContrastLevel;
+}
+
+/**
+ * Convert hex color to RGB values
+ * @param hex - Hex color string (e.g., '#ff0000')
+ * @returns RGB color object
+ */
+export const hexToRgb = (hex: string): RGBColor => {
+  const validatedHex = ColorSchema.parse(hex);
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(validatedHex);
   
-  const threshold = minContrast || (level === 'AA'
-    ? (isLargeText ? WCAG_AA_LARGE : WCAG_AA_NORMAL)
-    : (isLargeText ? WCAG_AAA_LARGE : WCAG_AAA_NORMAL));
-
-  const isAccessible = contrastRatio >= threshold;
-
-  let recommendation: string | undefined;
-  if (!isAccessible) {
-    const needed = threshold - contrastRatio;
-    recommendation = `Increase contrast by ${needed.toFixed(1)} points to meet ${level} standards`;
+  if (!result) {
+    throw new Error(`Invalid hex color: ${hex}`);
   }
 
   return {
-    isAccessible,
-    contrastRatio: Math.round(contrastRatio * 100) / 100,
-    recommendation,
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
   };
-}
+};
 
 /**
- * Generates accessible color variations
+ * Convert RGB color to hex string
+ * @param rgb - RGB color object
+ * @returns Hex color string
  */
-export function generateAccessibleColors(baseColor: string): {
-  light: string;
-  dark: string;
-  contrastRatios: {
-    lightOnWhite: number;
-    darkOnBlack: number;
+export const rgbToHex = (rgb: RGBColor): string => {
+  const toHex = (n: number): string => {
+    const hex = Math.round(n).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
   };
-} {
-  try {
-    const srgb = new sRGB(baseColor);
-    const lch = srgb.to('lch');
-    
-    // Generate lighter version (increase lightness)
-    const lightLch = lch.clone();
-    lightLch.l = Math.min(85, lch.l + 20);
-    const light = lightLch.to('srgb').toString({ format: 'hex' });
-    
-    // Generate darker version (decrease lightness)
-    const darkLch = lch.clone();
-    darkLch.l = Math.max(15, lch.l - 20);
-    const dark = darkLch.to('srgb').toString({ format: 'hex' });
 
-    return {
-      light,
-      dark,
-      contrastRatios: {
-        lightOnWhite: getContrastRatio(light, '#ffffff'),
-        darkOnBlack: getContrastRatio(dark, '#000000'),
-      },
+  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+};
+
+/**
+ * Calculate relative luminance of a color
+ * @param rgb - RGB color object
+ * @returns Relative luminance value (0-1)
+ */
+export const getRelativeLuminance = (rgb: RGBColor): number => {
+  const { r, g, b } = rgb;
+
+  // Normalize RGB values to 0-1 range
+  const rs = r / 255;
+  const gs = g / 255;
+  const bs = b / 255;
+
+  // Apply gamma correction
+  const linearize = (c: number): number => {
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+
+  const rLinear = linearize(rs);
+  const gLinear = linearize(gs);
+  const bLinear = linearize(bs);
+
+  // Calculate relative luminance using WCAG formula
+  return 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+};
+
+/**
+ * Calculate contrast ratio between two colors
+ * @param color1 - First color (hex string)
+ * @param color2 - Second color (hex string)
+ * @returns Contrast ratio (1-21)
+ */
+export const getContrastRatio = (color1: string, color2: string): number => {
+  const rgb1 = hexToRgb(color1);
+  const rgb2 = hexToRgb(color2);
+
+  const luminance1 = getRelativeLuminance(rgb1);
+  const luminance2 = getRelativeLuminance(rgb2);
+
+  // Ensure lighter color is numerator for proper ratio calculation
+  const lighter = Math.max(luminance1, luminance2);
+  const darker = Math.min(luminance1, luminance2);
+
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+/**
+ * Check if contrast ratio meets WCAG accessibility standards
+ * @param foreground - Foreground color (hex string)
+ * @param background - Background color (hex string)
+ * @param level - WCAG compliance level ('AA' or 'AAA')
+ * @returns Boolean indicating if contrast is accessible
+ */
+export const isAccessibleContrast = (
+  foreground: string,
+  background: string,
+  level: ContrastLevel = 'AA'
+): boolean => {
+  const ratio = getContrastRatio(foreground, background);
+  const threshold = level === 'AAA' ? 7 : 4.5;
+  
+  return ratio >= threshold;
+};
+
+/**
+ * Get detailed contrast analysis
+ * @param foreground - Foreground color (hex string)
+ * @param background - Background color (hex string)
+ * @returns Detailed contrast result
+ */
+export const getContrastAnalysis = (
+  foreground: string,
+  background: string
+): ContrastResult & {
+  meetsAA: boolean;
+  meetsAAA: boolean;
+  largeTextAA: boolean;
+  largeTextAAA: boolean;
+} => {
+  const ratio = getContrastRatio(foreground, background);
+  
+  return {
+    ratio,
+    isAccessible: ratio >= 4.5,
+    level: ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : 'AA',
+    meetsAA: ratio >= 4.5,
+    meetsAAA: ratio >= 7,
+    largeTextAA: ratio >= 3,
+    largeTextAAA: ratio >= 4.5,
+  };
+};
+
+/**
+ * Generate accessible color palette based on a base color
+ * @param baseColor - Base color (hex string)
+ * @param steps - Number of color variations to generate
+ * @returns Array of accessible color combinations
+ */
+export const generateAccessiblePalette = (
+  baseColor: string,
+  steps: number = 5
+): Array<{ color: string; onColor: string; contrast: number }> => {
+  const baseRgb = hexToRgb(baseColor);
+  const palette: Array<{ color: string; onColor: string; contrast: number }> = [];
+
+  for (let i = 0; i < steps; i++) {
+    const lightness = (i / (steps - 1)) * 0.8 + 0.1; // 0.1 to 0.9
+    
+    // Generate color by adjusting lightness
+    const adjustedRgb: RGBColor = {
+      r: Math.round(baseRgb.r * lightness),
+      g: Math.round(baseRgb.g * lightness),
+      b: Math.round(baseRgb.b * lightness),
     };
-  } catch (error) {
-    // Fallback for invalid colors
-    return {
-      light: '#f3f4f6',
-      dark: '#1f2937',
-      contrastRatios: {
-        lightOnWhite: 1.2,
-        darkOnBlack: 12.6,
-      },
-    };
+    
+    const color = rgbToHex(adjustedRgb);
+    
+    // Determine accessible text color (white or black)
+    const whiteContrast = getContrastRatio(color, '#ffffff');
+    const blackContrast = getContrastRatio(color, '#000000');
+    
+    const onColor = whiteContrast >= blackContrast ? '#ffffff' : '#000000';
+    const contrast = Math.max(whiteContrast, blackContrast);
+    
+    palette.push({
+      color,
+      onColor,
+      contrast,
+    });
   }
-}
+
+  return palette.filter(item => item.contrast >= 4.5);
+};
 
 /**
- * Focus management utilities
+ * Find the most accessible color from a list of options
+ * @param backgroundColor - Background color (hex string)
+ * @param colorOptions - Array of color options (hex strings)
+ * @param level - WCAG compliance level
+ * @returns Most accessible color option or null if none meet requirements
  */
-export const focusUtils = {
-  /**
-   * Sets focus to the first focusable element in a container
-   */
-  focusFirst: (container: HTMLElement): boolean => {
-    const focusable = container.querySelector(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    ) as HTMLElement;
-    
-    if (focusable) {
-      focusable.focus();
-      return true;
-    }
-    return false;
-  },
+export const findMostAccessibleColor = (
+  backgroundColor: string,
+  colorOptions: string[],
+  level: ContrastLevel = 'AA'
+): string | null => {
+  let bestColor: string | null = null;
+  let bestRatio = 0;
 
-  /**
-   * Traps focus within a container
-   */
-  trapFocus: (container: HTMLElement): (() => void) => {
-    const focusableElements = container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    ) as NodeListOf<HTMLElement>;
-
-    if (focusableElements.length === 0) return () => {};
-
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
-        if (e.shiftKey) {
-          if (document.activeElement === firstElement) {
-            e.preventDefault();
-            lastElement.focus();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            e.preventDefault();
-            firstElement.focus();
-          }
-        }
+  for (const color of colorOptions) {
+    try {
+      const ratio = getContrastRatio(backgroundColor, color);
+      
+      if (ratio > bestRatio && isAccessibleContrast(backgroundColor, color, level)) {
+        bestColor = color;
+        bestRatio = ratio;
       }
-    };
+    } catch (error) {
+      // Skip invalid colors
+      continue;
+    }
+  }
 
-    container.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      container.removeEventListener('keydown', handleKeyDown);
-    };
-  },
+  return bestColor;
 };
 
 /**
- * Screen reader utilities
+ * Validate color accessibility for text content
+ * @param textColor - Text color (hex string)
+ * @param backgroundColor - Background color (hex string)
+ * @param fontSize - Font size in pixels
+ * @param fontWeight - Font weight (normal or bold)
+ * @returns Accessibility validation result
  */
-export const screenReaderUtils = {
-  /**
-   * Announces text to screen readers
-   */
-  announce: (message: string, priority: 'polite' | 'assertive' = 'polite'): void => {
-    const announcer = document.createElement('div');
-    announcer.setAttribute('aria-live', priority);
-    announcer.setAttribute('aria-atomic', 'true');
-    announcer.className = 'sr-only absolute -left-[10000px] w-px h-px overflow-hidden';
-    
-    document.body.appendChild(announcer);
-    
-    // Slight delay to ensure screen readers pick up the change
-    setTimeout(() => {
-      announcer.textContent = message;
-      setTimeout(() => {
-        document.body.removeChild(announcer);
-      }, 1000);
-    }, 100);
-  },
-};
-
-/**
- * Keyboard navigation utilities
- */
-export const keyboardUtils = {
-  /**
-   * Common keyboard event handlers
-   */
-  isActivationKey: (event: KeyboardEvent): boolean => {
-    return event.key === 'Enter' || event.key === ' ';
-  },
-
-  isEscapeKey: (event: KeyboardEvent): boolean => {
-    return event.key === 'Escape';
-  },
-
-  isArrowKey: (event: KeyboardEvent): boolean => {
-    return ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key);
-  },
+export const validateTextAccessibility = (
+  textColor: string,
+  backgroundColor: string,
+  fontSize: number = 16,
+  fontWeight: 'normal' | 'bold' = 'normal'
+): {
+  isAccessible: boolean;
+  ratio: number;
+  requiredRatio: number;
+  level: ContrastLevel | 'fail';
+  isLargeText: boolean;
+} => {
+  const ratio = getContrastRatio(textColor, backgroundColor);
+  const isLargeText = fontSize >= 18 || (fontSize >= 14 && fontWeight === 'bold');
+  
+  const normalTextAAThreshold = 4.5;
+  const normalTextAAAThreshold = 7;
+  const largeTextAAThreshold = 3;
+  const largeTextAAAThreshold = 4.5;
+  
+  const requiredRatio = isLargeText ? largeTextAAThreshold : normalTextAAThreshold;
+  const aaaRequiredRatio = isLargeText ? largeTextAAAThreshold : normalTextAAAThreshold;
+  
+  let level: ContrastLevel | 'fail' = 'fail';
+  if (ratio >= aaaRequiredRatio) {
+    level = 'AAA';
+  } else if (ratio >= requiredRatio) {
+    level = 'AA';
+  }
+  
+  return {
+    isAccessible: ratio >= requiredRatio,
+    ratio,
+    requiredRatio,
+    level,
+    isLargeText,
+  };
 };
