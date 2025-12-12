@@ -318,3 +318,6 @@ describe('Accessibility Tests', () => {
         expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
         expect(mockIsWCAGCompliant).toHaveBeenCalledWith(5.1, WCAG_AA_NORMAL);
       });
+    });
+  });
+});
