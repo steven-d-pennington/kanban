@@ -18,15 +18,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           'placeholder:text-gray-500 dark:placeholder:text-gray-400',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
           'disabled:cursor-not-allowed disabled:opacity-50',
-          // Light mode styles
+          // Light mode styles - improved contrast
           'bg-white text-gray-900 border-gray-300',
           'focus-visible:ring-blue-500 focus-visible:ring-offset-white',
-          // Dark mode styles
-          'dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600',
+          // Dark mode styles - improved contrast
+          'dark:bg-gray-900 dark:text-white dark:border-gray-600',
           'dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-gray-900',
-          // Variant styles
+          // Variant styles - improved contrast
           {
-            'border-red-300 focus-visible:ring-red-500 dark:border-red-600 dark:focus-visible:ring-red-400':
+            'border-red-500 focus-visible:ring-red-500 text-red-900 bg-red-50 dark:border-red-500 dark:focus-visible:ring-red-400 dark:text-red-100 dark:bg-red-950':
               variant === 'destructive' || error,
           },
           className
