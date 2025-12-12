@@ -50,7 +50,44 @@ export class ImplementationPlanner {
   async createPlan(input: PlanInput): Promise<ImplementationPlan> {
     const anthropic = new Anthropic();
 
-    const userPrompt = `Create an implementation plan for:
+    const hasComments = input.comments && input.comments.length > 0;
+
+    let userPrompt = '';
+
+    if (hasComments) {
+      // MODE: FIX / REFINEMENT
+      // Prioritize the comments as the "Task"
+      userPrompt = `TASK: Resolve the reported feedback/errors for: ${input.item.title}
+
+**PRIMARY INSTRUCTION (Read Carefully):**
+The user has reported issues with the current implementation. 
+Your GOAL is to FIX these specific issues.
+DO NOT re-implement the entire feature. Assume the feature is mostly good, but needs specific fixes based on the feedback below.
+
+**🔎 FEEDBACK / ERROR REPORT (The Task):**
+${input.comments?.join('\n')}
+
+**📄 REFERENCE CONTEXT (Original Story):**
+(Use this only to understand the intended behavior. Do not treat this as a request to implement from scratch.)
+${input.item.description}
+Acceptance Criteria:
+${input.acceptanceCriteria?.join('\n') || 'See description'}
+
+**Codebase Context:**
+Tech Stack: ${JSON.stringify(input.codebaseContext.techStack)}
+Patterns: ${JSON.stringify(input.codebaseContext.patterns)}
+    
+**REPOSITORY STRUCTURE:**
+${input.codebaseContext.repositoryStructure || 'Standard single-project repo'}
+
+**Relevant Files:**
+${input.codebaseContext.relevantFiles.map(f => `- ${f.path}: ${f.description || 'No description'}`).join('\n') || 'None specified'}
+
+Create a plan to FIX the reported issues.`;
+    } else {
+      // MODE: NEW IMPLEMENTATION
+      // Standard behavior
+      userPrompt = `Create an implementation plan for:
 
 **${input.item.type.toUpperCase()}:** ${input.item.title}
 
@@ -64,11 +101,15 @@ ${input.acceptanceCriteria?.join('\n') || 'See description'}
 Tech Stack: ${JSON.stringify(input.codebaseContext.techStack)}
 Patterns: ${JSON.stringify(input.codebaseContext.patterns)}
 Conventions: ${JSON.stringify(input.codebaseContext.conventions)}
+    
+**REPOSITORY STRUCTURE:**
+${input.codebaseContext.repositoryStructure || 'Standard single-project repo'}
 
 **Relevant Files:**
 ${input.codebaseContext.relevantFiles.map(f => `- ${f.path}: ${f.description || 'No description'}`).join('\n') || 'None specified'}
 
 Create a detailed, step-by-step implementation plan.`;
+    }
 
     console.log(`[Planner] 🤔 Thinking... Generating plan for "${input.item.title}"`);
     const response = await anthropic.messages.create({

@@ -60,12 +60,17 @@ export class CodebaseAnalyzer {
     const techStack = this.detectTechStack();
     const conventions = this.detectConventions();
 
+    // Detect repo structure (Monorepo support)
+    const repositoryStructure = await this.detectRepositoryStructure(structure);
+
     return {
       structure,
+      repositoryStructure,
       relevantFiles,
       patterns,
       techStack,
       conventions,
+      branch: options.branch,
     };
   }
 
@@ -96,6 +101,34 @@ export class CodebaseAnalyzer {
         // We could expand this based on rawStructure if needed
       ],
     };
+  }
+
+  /**
+   * Detect high-level repository structure.
+   */
+  private async detectRepositoryStructure(structure: DirectoryStructure): Promise<string> {
+    const rawStructure = await this.prCreator.getDirectoryStructure();
+
+    // Check for common root-level project directories
+    const hasFrontend = rawStructure.some(s => s.path === 'frontend' && s.type === 'tree');
+    const hasBackend = rawStructure.some(s => s.path === 'backend' && s.type === 'tree');
+    const hasAgent = rawStructure.some(s => s.path === 'agent' && s.type === 'tree');
+    const hasSrc = rawStructure.some(s => s.path === 'src' && s.type === 'tree');
+    const hasRootPackageJson = rawStructure.some(s => s.path === 'package.json');
+
+    const parts: string[] = [];
+
+    if (hasFrontend) parts.push('- `frontend/`: Likely a frontend application root.');
+    if (hasBackend) parts.push('- `backend/`: Likely a backend application root.');
+    if (hasAgent) parts.push('- `agent/`: Likely an agent/service application root.');
+    if (hasSrc && !hasFrontend && !hasBackend) parts.push('- `src/`: Standard single-repo source root.');
+
+    if (parts.length === 0) {
+      return 'Standard single-package repository structure.';
+    }
+
+    return `This is a multi-project repository (Monorepo) structure:\n${parts.join('\n')}\n` +
+      `IMPORTANT: You MUST modify files within these subdirectories (e.g. \`frontend/src/...\`) rather than creating new files in the root.`;
   }
 
   /**

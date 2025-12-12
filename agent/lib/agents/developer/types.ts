@@ -56,10 +56,12 @@ export interface TechStack {
  */
 export interface CodebaseContext {
   structure: DirectoryStructure;
+  repositoryStructure: string; // High-level structure (e.g., "frontend/ package.json found")
   relevantFiles: FileInfo[];
   patterns: CodePatterns;
   techStack: TechStack;
   conventions: Record<string, unknown>;
+  branch?: string;
 }
 
 /**
@@ -105,6 +107,7 @@ export interface PlanInput {
   };
   codebaseContext: CodebaseContext;
   acceptanceCriteria?: string[];
+  comments?: string[]; // Recent feedback/context
 }
 
 /**

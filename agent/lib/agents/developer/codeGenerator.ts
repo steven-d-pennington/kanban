@@ -61,7 +61,7 @@ export class CodeGenerator {
 
       // Generate content for each file in the step
       for (const rawPath of step.files) {
-        const expandedPaths = await this.expandPath(rawPath);
+        const expandedPaths = await this.expandPath(rawPath, input.codebaseContext.branch);
 
         for (const filePath of expandedPaths) {
           if (step.action === 'modify') {
@@ -69,7 +69,7 @@ export class CodeGenerator {
           }
 
           const existingContent = step.action === 'modify'
-            ? await this.readFile(filePath)
+            ? await this.readFile(filePath, input.codebaseContext.branch)
             : null;
 
           if (step.action === 'modify' && existingContent === null) {
@@ -78,7 +78,7 @@ export class CodeGenerator {
           }
 
           if (step.action === 'create') {
-            const exists = await this.prCreator.getFileContent(filePath);
+            const exists = await this.prCreator.getFileContent(filePath, input.codebaseContext.branch);
             if (exists) {
               console.log(`[CodeGenerator] Note: File ${filePath} already exists, treating as modify`);
             } else {
@@ -131,16 +131,16 @@ export class CodeGenerator {
    * Read existing file content using GitHub API.
    * Includes case-insensitive recovery logic.
    */
-  private async readFile(filePath: string): Promise<string | null> {
+  private async readFile(filePath: string, branch: string = 'main'): Promise<string | null> {
     // Try exact match first
-    let content = await this.prCreator.getFileContent(filePath);
+    let content = await this.prCreator.getFileContent(filePath, branch);
 
     if (content) return content;
 
     // If failed, try case-insensitive lookup
     console.log(`[CodeGenerator] Exact match failed for ${filePath}, trying case-insensitive search...`);
     try {
-      const structure = await this.prCreator.getDirectoryStructure();
+      const structure = await this.prCreator.getDirectoryStructure('', branch);
       const normalizedTarget = filePath.toLowerCase();
 
       const match = structure.find(item =>
@@ -149,7 +149,7 @@ export class CodeGenerator {
 
       if (match) {
         console.log(`[CodeGenerator] Found case-insensitive match: ${match.path}`);
-        return await this.prCreator.getFileContent(match.path);
+        return await this.prCreator.getFileContent(match.path, branch);
       }
     } catch (err) {
       console.warn('[CodeGenerator] Directory scan failed during recovery:', err);
@@ -162,7 +162,7 @@ export class CodeGenerator {
   /**
    * Expand glob patterns to real file paths.
    */
-  private async expandPath(pattern: string): Promise<string[]> {
+  private async expandPath(pattern: string, branch: string = 'main'): Promise<string[]> {
     // If no wildcards, return as is
     if (!pattern.includes('*')) {
       return [pattern];
@@ -170,7 +170,7 @@ export class CodeGenerator {
 
     // Fetch directory structure to find matches
     try {
-      const rawStructure = await this.prCreator.getDirectoryStructure();
+      const rawStructure = await this.prCreator.getDirectoryStructure('', branch);
       const matches = rawStructure
         .filter(item => item.type === 'blob' && matchPattern(item.path, pattern))
         .map(item => item.path);

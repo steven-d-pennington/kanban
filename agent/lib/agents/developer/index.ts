@@ -6,6 +6,7 @@
  */
 
 import { AgentBase } from '../../shared/AgentBase';
+import { getComments } from '../../handoff';
 import type { ProcessResult, ValidationResult } from '../../shared/types';
 import type { WorkItem } from '../../workItems';
 import { CodebaseAnalyzer } from './codebaseAnalyzer';
@@ -85,6 +86,20 @@ export class DeveloperAgent extends AgentBase {
         branch: branchName, // Pass the specific branch
       });
 
+      // Step 2: Fetch Comments (Context from Feedback)
+      const comments = await getComments(item.id);
+
+      // Filter out agent's own comments to avoid loops/confusion, take only the last 1 user comment
+      const recentComments = comments
+        .filter(c => c.author_agent !== 'developer')
+        .slice(-1)
+        .map(c => `${c.author_agent || 'User'}: ${c.content}`);
+
+      if (recentComments.length > 0) {
+        console.log(`[DeveloperAgent] 💬 Reading context from ${recentComments.length} recent comments...`);
+        recentComments.forEach(c => console.log(`  > ${c.substring(0, 100)}...`));
+      }
+
       // Step 3: Create implementation plan
       await this.logger?.logProcessing({ step: 'creating_plan' });
 
@@ -98,6 +113,7 @@ export class DeveloperAgent extends AgentBase {
         },
         codebaseContext,
         acceptanceCriteria: item.metadata?.acceptance_criteria as string[] | undefined,
+        comments: recentComments,
       });
 
       // Validate plan
@@ -212,8 +228,11 @@ export class DeveloperAgent extends AgentBase {
         if (!step.description) {
           errors.push(`Step ${step.order}: Missing description`);
         }
-        if (!step.files || step.files.length === 0) {
-          errors.push(`Step ${step.order}: No files specified`);
+        if (step.description && (!step.files || step.files.length === 0)) {
+          // Warn but don't fail - some steps might be "Run tests" which code generator will skip
+          console.warn(`[DeveloperAgent] Warning: Step ${step.order} has no files specified. It will be skipped by CodeGenerator.`);
+        } else if (!step.files) {
+          errors.push(`Step ${step.order}: Files array is missing`);
         }
         if (!['create', 'modify', 'delete'].includes(step.action)) {
           errors.push(`Step ${step.order}: Invalid action`);
