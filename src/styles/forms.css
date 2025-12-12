@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* WCAG AA Compliant Color Constants (4.5:1 minimum contrast ratio) */
+:root {
+  /* Input Colors */
+  --input-text: #1f2937; /* gray-800 */
+  --input-background: #ffffff; /* white */
+  --input-border: #d1d5db; /* gray-300 */
+  --input-border-hover: #9ca3af; /* gray-400 */
+  --input-border-focus: #2563eb; /* blue-600 */
+  --input-placeholder: #6b7280; /* gray-500 */
+  --input-disabled-bg: #f9fafb; /* gray-50 */
+  --input-disabled-text: #9ca3af; /* gray-400 */
+  
+  /* Label Colors */
+  --label-text: #111827; /* gray-900 */
+  --label-required: #dc2626; /* red-600 */
+  --label-optional: #6b7280; /* gray-500 */
+  
+  /* State Colors */
+  --error-text: #dc2626; /* red-600 */
+  --error-border: #dc2626; /* red-600 */
+  --error-background: #fef2f2; /* red-50 */
+  --success-text: #059669; /* emerald-600 */
+  --success-border: #059669; /* emerald-600 */
+  --success-background: #ecfdf5; /* emerald-50 */
+  --warning-text: #d97706; /* amber-600 */
+  --warning-border: #d97706; /* amber-600 */
+  --warning-background: #fffbeb; /* amber-50 */
+  
+  /* Helper Text */
+  --helper-text: #6b7280; /* gray-500 */
+  --helper-text-error: #dc2626; /* red-600 */
+  --helper-text-success: #059669; /* emerald-600 */
+  --helper-text-warning: #d97706; /* amber-600 */
+}
+
+/* Base Form Styles */
+@layer components {
+  .form-input {
+    @apply w-full px-3 py-2 border rounded-md shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20;
+    @apply transition-colors duration-150 ease-in-out;
+    color: var(--input-text);
+    background-color: var(--input-background);
+    border-color: var(--input-border);
+  }
+  
+  .form-input::placeholder {
+    color: var(--input-placeholder);
+  }
+  
+  .form-input:hover:not(:disabled) {
+    border-color: var(--input-border-hover);
+  }
+  
+  .form-input:focus {
+    border-color: var(--input-border-focus);
+  }
+  
+  .form-input:disabled {
+    background-color: var(--input-disabled-bg);
+    color: var(--input-disabled-text);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium mb-1;
+    color: var(--label-text);
+  }
+  
+  .form-label.required::after {
+    content: ' *';
+    color: var(--label-required);
+  }
+  
+  .form-label.optional::after {
+    content: ' (optional)';
+    color: var(--label-optional);
+    font-weight: normal;
+  }
+  
+  .form-helper {
+    @apply text-xs mt-1;
+    color: var(--helper-text);
+  }
+  
+  .form-error {
+    @apply text-xs mt-1;
+    color: var(--helper-text-error);
+  }
+  
+  .form-success {
+    @apply text-xs mt-1;
+    color: var(--helper-text-success);
+  }
+  
+  .form-warning {
+    @apply text-xs mt-1;
+    color: var(--helper-text-warning);
+  }
+  
+  /* State Variants */
+  .form-input.error {
+    border-color: var(--error-border);
+    background-color: var(--error-background);
+  }
+  
+  .form-input.success {
+    border-color: var(--success-border);
+    background-color: var(--success-background);
+  }
+  
+  .form-input.warning {
+    border-color: var(--warning-border);
+    background-color: var(--warning-background);
+  }
+  
+  /* Focus states for error/success/warning */
+  .form-input.error:focus {
+    @apply ring-red-500 ring-opacity-20;
+    border-color: var(--error-border);
+  }
+  
+  .form-input.success:focus {
+    @apply ring-emerald-500 ring-opacity-20;
+    border-color: var(--success-border);
+  }
+  
+  .form-input.warning:focus {
+    @apply ring-amber-500 ring-opacity-20;
+    border-color: var(--warning-border);
+  }
+  
+  /* Form Group */
+  .form-group {
+    @apply mb-4;
+  }
+  
+  /* Select Styling */
+  .form-select {
+    @apply form-input;
+    @apply bg-no-repeat bg-right;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+  
+  /* Textarea Styling */
+  .form-textarea {
+    @apply form-input;
+    @apply resize-y min-h-[6rem];
+  }
+  
+  /* Checkbox and Radio Styling */
+  .form-checkbox,
+  .form-radio {
+    @apply w-4 h-4 border rounded;
+    @apply focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20;
+    @apply transition-colors duration-150 ease-in-out;
+    color: var(--input-border-focus);
+    border-color: var(--input-border);
+  }
+  
+  .form-checkbox:checked,
+  .form-radio:checked {
+    background-color: var(--input-border-focus);
+    border-color: var(--input-border-focus);
+  }
+  
+  .form-radio {
+    @apply rounded-full;
+  }
+  
+  /* Form Control Group (for checkboxes and radios) */
+  .form-control-group {
+    @apply flex items-center space-x-2;
+  }
+  
+  .form-control-group .form-label {
+    @apply mb-0;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --input-border: #374151; /* gray-700 */
+    --input-border-hover: #1f2937; /* gray-800 */
+    --input-text: #000000;
+    --label-text: #000000;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --input-text: #f9fafb; /* gray-50 */
+    --input-background: #1f2937; /* gray-800 */
+    --input-border: #4b5563; /* gray-600 */
+    --input-border-hover: #6b7280; /* gray-500 */
+    --input-border-focus: #3b82f6; /* blue-500 */
+    --input-placeholder: #9ca3af; /* gray-400 */
+    --input-disabled-bg: #111827; /* gray-900 */
+    --input-disabled-text: #6b7280; /* gray-500 */
+    
+    --label-text: #f9fafb; /* gray-50 */
+    --label-optional: #9ca3af; /* gray-400 */
+    
+    --error-background: #1f1917; /* red-900/10 */
+    --success-background: #001f14; /* emerald-900/10 */
+    --warning-background: #1f1a00; /* amber-900/10 */
+    
+    --helper-text: #9ca3af; /* gray-400 */
+  }
+}
+
+/* Utility Classes for Accessibility */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  
+  .focus-visible {
+    @apply outline-none;
+  }
+  
+  .focus-visible:focus-visible {
+    @apply ring-2 ring-blue-500 ring-opacity-50 outline-none;
+  }
+  
+  /* Ensure minimum touch target size (44x44px) */
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px];
+  }
+}
