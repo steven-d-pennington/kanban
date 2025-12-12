@@ -7,317 +7,489 @@ import { Label } from '../components/ui/Label';
 import { Textarea } from '../components/ui/Textarea';
 import { Select } from '../components/ui/Select';
 import { Button } from '../components/ui/Button';
-import { 
-  calculateContrastRatio,
-  isWCAGCompliant,
-  WCAG_AA_NORMAL,
-  WCAG_AA_LARGE,
-  hexToRgb
-} from '../utils/accessibility';
+import { Checkbox } from '../components/ui/Checkbox';
+import { RadioGroup } from '../components/ui/RadioGroup';
+import { Card } from '../components/ui/Card';
 
-// Extend expect with jest-axe matchers
 expect.extend(toHaveNoViolations);
 
-// Mock accessibility utils
-vi.mock('../utils/accessibility', () => ({
-  calculateContrastRatio: vi.fn(),
-  isWCAGCompliant: vi.fn(),
-  hexToRgb: vi.fn(),
-  WCAG_AA_NORMAL: 4.5,
-  WCAG_AA_LARGE: 3.0,
-  WCAG_AAA_NORMAL: 7.0,
-  WCAG_AAA_LARGE: 4.5
-}));
-
-// Helper function to get computed styles
-const getComputedStyleValue = (element: Element, property: string): string => {
-  return window.getComputedStyle(element).getPropertyValue(property);
-};
-
-// Helper function to extract color from computed style
-const extractColorFromStyle = (colorString: string): string => {
-  // Convert rgb(r, g, b) to hex
-  const rgbMatch = colorString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (rgbMatch) {
-    const [, r, g, b] = rgbMatch;
-    return `#${parseInt(r).toString(16).padStart(2, '0')}${parseInt(g).toString(16).padStart(2, '0')}${parseInt(b).toString(16).padStart(2, '0')}`;
-  }
-  return colorString;
-};
-
 describe('Accessibility Tests', () => {
-  let mockCalculateContrastRatio: any;
-  let mockIsWCAGCompliant: any;
-  let mockHexToRgb: any;
-
   beforeEach(() => {
-    mockCalculateContrastRatio = vi.mocked(calculateContrastRatio);
-    mockIsWCAGCompliant = vi.mocked(isWCAGCompliant);
-    mockHexToRgb = vi.mocked(hexToRgb);
-    
-    // Default mock implementations
-    mockCalculateContrastRatio.mockReturnValue(4.5);
-    mockIsWCAGCompliant.mockReturnValue(true);
-    mockHexToRgb.mockReturnValue({ r: 0, g: 0, b: 0 });
-  });
-
-  afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('Color Contrast Ratios - WCAG AA Standards', () => {
-    describe('Button variants contrast compliance', () => {
-      it('should meet WCAG AA standards for default button variant', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.6);
-        mockIsWCAGCompliant.mockReturnValue(true);
+  afterEach(() => {
+    vi.clearAllTimers();
+  });
 
-        render(<Button variant="default">Test Button</Button>);
-        const button = screen.getByRole('button');
+  describe('Button Component Accessibility', () => {
+    it('should have no accessibility violations for default button', async () => {
+      const { container } = render(
+        <Button>Click me</Button>
+      );
 
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.6, WCAG_AA_NORMAL);
-        expect(mockIsWCAGCompliant).toHaveReturnedWith(true);
-      });
-
-      it('should meet WCAG AA standards for secondary button variant', () => {
-        mockCalculateContrastRatio.mockReturnValue(5.2);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Button variant="secondary">Secondary Button</Button>);
-        const button = screen.getByRole('button');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(5.2, WCAG_AA_NORMAL);
-      });
-
-      it('should meet WCAG AA standards for destructive button variant', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.8);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Button variant="destructive">Delete</Button>);
-        const button = screen.getByRole('button');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.8, WCAG_AA_NORMAL);
-      });
-
-      it('should meet WCAG AA standards for outline button variant', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.7);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Button variant="outline">Outline Button</Button>);
-        const button = screen.getByRole('button');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.7, WCAG_AA_NORMAL);
-      });
-
-      it('should meet WCAG AA standards for ghost button variant', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.9);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Button variant="ghost">Ghost Button</Button>);
-        const button = screen.getByRole('button');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.9, WCAG_AA_NORMAL);
-      });
-
-      it('should maintain contrast on hover states', async () => {
-        const user = userEvent.setup();
-        mockCalculateContrastRatio.mockReturnValue(4.6);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Button variant="default">Hover Test</Button>);
-        const button = screen.getByRole('button');
-
-        await user.hover(button);
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.6, WCAG_AA_NORMAL);
-      });
-
-      it('should maintain contrast on focus states', async () => {
-        const user = userEvent.setup();
-        mockCalculateContrastRatio.mockReturnValue(4.5);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Button variant="default">Focus Test</Button>);
-        const button = screen.getByRole('button');
-
-        await user.tab();
-        expect(button).toHaveFocus();
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.5, WCAG_AA_NORMAL);
-      });
-
-      it('should maintain contrast for disabled buttons', () => {
-        mockCalculateContrastRatio.mockReturnValue(3.2);
-        mockIsWCAGCompliant.mockReturnValue(false);
-
-        render(<Button variant="default" disabled>Disabled Button</Button>);
-        const button = screen.getByRole('button');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        // Disabled buttons have relaxed contrast requirements
-        expect(button).toBeDisabled();
-      });
-
-      it('should handle large text buttons with WCAG AA large text standards', () => {
-        mockCalculateContrastRatio.mockReturnValue(3.2);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Button variant="default" size="lg">Large Button</Button>);
-        const button = screen.getByRole('button');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(button, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(button, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(3.2, WCAG_AA_LARGE);
-      });
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
 
-    describe('Form input contrast compliance', () => {
-      it('should meet WCAG AA standards for default input', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.7);
-        mockIsWCAGCompliant.mockReturnValue(true);
+    it('should have no accessibility violations for disabled button', async () => {
+      const { container } = render(
+        <Button disabled>Disabled Button</Button>
+      );
 
-        render(<Input placeholder="Enter text" />);
-        const input = screen.getByRole('textbox');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(input, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(input, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.7, WCAG_AA_NORMAL);
-      });
-
-      it('should meet WCAG AA standards for error input variant', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.8);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Input variant="destructive" placeholder="Error input" />);
-        const input = screen.getByRole('textbox');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(input, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(input, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.8, WCAG_AA_NORMAL);
-      });
-
-      it('should maintain contrast for input focus states', async () => {
-        const user = userEvent.setup();
-        mockCalculateContrastRatio.mockReturnValue(4.6);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(<Input placeholder="Focus test" />);
-        const input = screen.getByRole('textbox');
-
-        await user.click(input);
-        expect(input).toHaveFocus();
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(input, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(input, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.6, WCAG_AA_NORMAL);
-      });
-
-      it('should meet WCAG AA standards for disabled input', () => {
-        mockCalculateContrastRatio.mockReturnValue(3.1);
-
-        render(<Input disabled placeholder="Disabled input" />);
-        const input = screen.getByRole('textbox');
-
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(input, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(input, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(input).toBeDisabled();
-      });
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
 
-    describe('Label contrast compliance', () => {
-      it('should meet WCAG AA standards for default labels', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.8);
-        mockIsWCAGCompliant.mockReturnValue(true);
+    it('should have no accessibility violations for button with aria-label', async () => {
+      const { container } = render(
+        <Button aria-label="Close dialog">×</Button>
+      );
 
-        render(
-          <div>
-            <Label htmlFor="test-input">Test Label</Label>
-            <Input id="test-input" />
-          </div>
-        );
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
 
-        const label = screen.getByText('Test Label');
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(label.parentElement!, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(label, 'color'));
+    it('should have no accessibility violations for button variants', async () => {
+      const { container } = render(
+        <div>
+          <Button variant="primary">Primary</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="link">Link</Button>
+        </div>
+      );
 
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.8, WCAG_AA_NORMAL);
-      });
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
 
-      it('should meet WCAG AA standards for error labels', () => {
-        mockCalculateContrastRatio.mockReturnValue(4.9);
-        mockIsWCAGCompliant.mockReturnValue(true);
+    it('should have no accessibility violations for button sizes', async () => {
+      const { container } = render(
+        <div>
+          <Button size="sm">Small</Button>
+          <Button size="md">Medium</Button>
+          <Button size="lg">Large</Button>
+        </div>
+      );
 
-        render(
-          <div>
-            <Label variant="error" htmlFor="error-input">Error Label</Label>
-            <Input id="error-input" variant="destructive" />
-          </div>
-        );
-
-        const label = screen.getByText('Error Label');
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(label.parentElement!, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(label, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(4.9, WCAG_AA_NORMAL);
-      });
-
-      it('should meet WCAG AA standards for success labels', () => {
-        mockCalculateContrastRatio.mockReturnValue(5.1);
-        mockIsWCAGCompliant.mockReturnValue(true);
-
-        render(
-          <Label variant="success">Success Label</Label>
-        );
-
-        const label = screen.getByText('Success Label');
-        const backgroundColor = extractColorFromStyle(getComputedStyleValue(label.parentElement!, 'background-color'));
-        const textColor = extractColorFromStyle(getComputedStyleValue(label, 'color'));
-
-        expect(mockCalculateContrastRatio).toHaveBeenCalledWith(backgroundColor, textColor);
-        expect(mockIsWCAGCompliant).toHaveBeenCalledWith(5.1, WCAG_AA_NORMAL);
-      });
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
-});
+
+  describe('Input Component Accessibility', () => {
+    it('should have no accessibility violations for input with label', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="test-input">Test Input</Label>
+          <Input id="test-input" placeholder="Enter text" />
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations for required input', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="required-input">Required Input *</Label>
+          <Input id="required-input" required aria-required="true" />
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations for input with error state', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="error-input">Error Input</Label>
+          <Input 
+            id="error-input" 
+            aria-invalid="true" 
+            aria-describedby="error-message"
+          />
+          <div id="error-message" role="alert">
+            This field is required
+          </div>
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations for different input types', async () => {
+      const { container } = render(
+        <div>
+          <div>
+            <Label htmlFor="email-input">Email</Label>
+            <Input id="email-input" type="email" />
+          </div>
+          <div>
+            <Label htmlFor="password-input">Password</Label>
+            <Input id="password-input" type="password" />
+          </div>
+          <div>
+            <Label htmlFor="number-input">Number</Label>
+            <Input id="number-input" type="number" />
+          </div>
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Textarea Component Accessibility', () => {
+    it('should have no accessibility violations for textarea with label', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="test-textarea">Comments</Label>
+          <Textarea id="test-textarea" placeholder="Enter your comments" />
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations for required textarea', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="required-textarea">Required Textarea *</Label>
+          <Textarea 
+            id="required-textarea" 
+            required 
+            aria-required="true"
+            maxLength={500}
+          />
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Select Component Accessibility', () => {
+    it('should have no accessibility violations for select with label', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="test-select">Choose Option</Label>
+          <Select id="test-select">
+            <option value="">Select an option</option>
+            <option value="option1">Option 1</option>
+            <option value="option2">Option 2</option>
+          </Select>
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations for select with optgroups', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="grouped-select">Categories</Label>
+          <Select id="grouped-select">
+            <optgroup label="Fruits">
+              <option value="apple">Apple</option>
+              <option value="banana">Banana</option>
+            </optgroup>
+            <optgroup label="Vegetables">
+              <option value="carrot">Carrot</option>
+              <option value="lettuce">Lettuce</option>
+            </optgroup>
+          </Select>
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Checkbox Component Accessibility', () => {
+    it('should have no accessibility violations for checkbox with label', async () => {
+      const { container } = render(
+        <div>
+          <Checkbox id="test-checkbox" />
+          <Label htmlFor="test-checkbox">Accept terms</Label>
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations for checkbox group', async () => {
+      const { container } = render(
+        <fieldset>
+          <legend>Select your interests</legend>
+          <div>
+            <Checkbox id="sports" />
+            <Label htmlFor="sports">Sports</Label>
+          </div>
+          <div>
+            <Checkbox id="music" />
+            <Label htmlFor="music">Music</Label>
+          </div>
+          <div>
+            <Checkbox id="movies" />
+            <Label htmlFor="movies">Movies</Label>
+          </div>
+        </fieldset>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('RadioGroup Component Accessibility', () => {
+    it('should have no accessibility violations for radio group', async () => {
+      const { container } = render(
+        <fieldset>
+          <legend>Choose your preferred contact method</legend>
+          <RadioGroup name="contact">
+            <div>
+              <input type="radio" id="email" name="contact" value="email" />
+              <Label htmlFor="email">Email</Label>
+            </div>
+            <div>
+              <input type="radio" id="phone" name="contact" value="phone" />
+              <Label htmlFor="phone">Phone</Label>
+            </div>
+            <div>
+              <input type="radio" id="mail" name="contact" value="mail" />
+              <Label htmlFor="mail">Mail</Label>
+            </div>
+          </RadioGroup>
+        </fieldset>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Card Component Accessibility', () => {
+    it('should have no accessibility violations for card with content', async () => {
+      const { container } = render(
+        <Card>
+          <h2>Card Title</h2>
+          <p>Card description content goes here.</p>
+          <Button>Action</Button>
+        </Card>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no accessibility violations for interactive card', async () => {
+      const { container } = render(
+        <Card 
+          role="button" 
+          tabIndex={0}
+          aria-label="Click to view details"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              // Handle click
+            }
+          }}
+        >
+          <h3>Interactive Card</h3>
+          <p>This card can be clicked or activated with keyboard.</p>
+        </Card>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Complex Form Accessibility', () => {
+    it('should have no accessibility violations for complete form', async () => {
+      const { container } = render(
+        <form>
+          <div>
+            <Label htmlFor="name">Full Name *</Label>
+            <Input id="name" required aria-required="true" />
+          </div>
+          
+          <div>
+            <Label htmlFor="email">Email Address *</Label>
+            <Input id="email" type="email" required aria-required="true" />
+          </div>
+          
+          <div>
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input id="phone" type="tel" />
+          </div>
+          
+          <fieldset>
+            <legend>Preferred Contact Method</legend>
+            <div>
+              <input type="radio" id="contact-email" name="contact" value="email" />
+              <Label htmlFor="contact-email">Email</Label>
+            </div>
+            <div>
+              <input type="radio" id="contact-phone" name="contact" value="phone" />
+              <Label htmlFor="contact-phone">Phone</Label>
+            </div>
+          </fieldset>
+          
+          <div>
+            <Label htmlFor="country">Country</Label>
+            <Select id="country">
+              <option value="">Select a country</option>
+              <option value="us">United States</option>
+              <option value="ca">Canada</option>
+              <option value="uk">United Kingdom</option>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="message">Message</Label>
+            <Textarea id="message" rows={4} />
+          </div>
+          
+          <div>
+            <Checkbox id="newsletter" />
+            <Label htmlFor="newsletter">Subscribe to newsletter</Label>
+          </div>
+          
+          <div>
+            <Checkbox id="terms" required />
+            <Label htmlFor="terms">I agree to the terms and conditions *</Label>
+          </div>
+          
+          <Button type="submit">Submit Form</Button>
+        </form>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Focus Management', () => {
+    it('should have no accessibility violations with focus indicators', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <div>
+          <Button>First Button</Button>
+          <Input placeholder="Input field" />
+          <Button>Second Button</Button>
+        </div>
+      );
+
+      // Test tab navigation
+      await user.tab();
+      await user.tab();
+      await user.tab();
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('ARIA Attributes', () => {
+    it('should have no accessibility violations with proper ARIA usage', async () => {
+      const { container } = render(
+        <div>
+          <Button aria-expanded="false" aria-controls="menu">
+            Menu
+          </Button>
+          <div id="menu" role="menu" aria-hidden="true">
+            <div role="menuitem">Item 1</div>
+            <div role="menuitem">Item 2</div>
+          </div>
+          
+          <div role="alert" aria-live="polite">
+            Status message
+          </div>
+          
+          <div 
+            role="progressbar" 
+            aria-valuenow={50} 
+            aria-valuemin={0} 
+            aria-valuemax={100}
+            aria-label="Upload progress"
+          >
+            50% complete
+          </div>
+        </div>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Semantic HTML', () => {
+    it('should have no accessibility violations with proper semantic structure', async () => {
+      const { container } = render(
+        <main>
+          <header>
+            <h1>Page Title</h1>
+            <nav aria-label="Main navigation">
+              <ul>
+                <li><a href="#section1">Section 1</a></li>
+                <li><a href="#section2">Section 2</a></li>
+              </ul>
+            </nav>
+          </header>
+          
+          <article>
+            <header>
+              <h2>Article Title</h2>
+              <time dateTime="2024-01-01">January 1, 2024</time>
+            </header>
+            <p>Article content goes here.</p>
+          </article>
+          
+          <aside>
+            <h3>Related Links</h3>
+            <ul>
+              <li><a href="#">Link 1</a></li>
+              <li><a href="#">Link 2</a></li>
+            </ul>
+          </aside>
+          
+          <footer>
+            <p>&copy; 2024 Company Name</p>
+          </footer>
+        </main>
+      );
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should have no accessibility violations with error messages', async () => {
+      const { container } = render(
+        <div>
+          <Label htmlFor="error-field">Required Field *</Label>
+          <Input 
+            id="error-field"
+            aria-invalid="true"
+            aria-describedby="error-message"
+          />
+          <div id="error-message" role="alert" aria-live="polite">
+            This field is required and cannot be empty.
+          </div>
+        </div>
+      );
+
+      const results = await
