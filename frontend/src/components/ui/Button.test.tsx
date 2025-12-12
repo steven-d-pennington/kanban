@@ -427,4 +427,26 @@ function getVariantHoverBackgroundColor(variant: string): string {
   return colors[variant as keyof typeof colors] || colors.default;
 }
 
-function getVariantHoverTextColor(variant
+function getVariantHoverTextColor(variant: string): string {
+  const colors = {
+    default: '#ffffff',
+    destructive: '#ffffff',
+    outline: '#1e40af',
+    secondary: '#0f172a',
+    ghost: '#1e40af',
+    link: '#1e40af'
+  };
+  return colors[variant as keyof typeof colors] || colors.default;
+}
+
+function getVariantClasses(variant: string): string {
+  const classes = {
+    default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+    ghost: 'hover:bg-accent hover:text-accent-foreground',
+    link: 'text-primary underline-offset-4 hover:underline'
+  };
+  return classes[variant as keyof typeof classes] || classes.default;
+}
