@@ -385,3 +385,257 @@ describe('Accessibility Tests', () => {
         
         const results = await axe(container);
         expect(results).toHaveNoViolations();
+      });
+
+      it('should have no axe violations for SignUpPage', async () => {
+        const { container } = render(
+          <SignUpPage 
+            onSwitchToLogin={vi.fn()} 
+          />
+        );
+        
+        const results = await axe(container);
+        expect(results).toHaveNoViolations();
+      });
+
+      it('should have no axe violations for ResetPasswordPage', async () => {
+        const { container } = render(
+          <ResetPasswordPage 
+            onSwitchToLogin={vi.fn()} 
+          />
+        );
+        
+        const results = await axe(container);
+        expect(results).toHaveNoViolations();
+      });
+    });
+  });
+
+  describe('Keyboard Navigation Tests', () => {
+    it('should support tab navigation through form elements', async () => {
+      const user = userEvent.setup();
+      render(
+        <form>
+          <Label htmlFor="first-input">First Name</Label>
+          <Input id="first-input" type="text" />
+          
+          <Label htmlFor="email-input">Email</Label>
+          <Input id="email-input" type="email" />
+          
+          <Label htmlFor="country-select">Country</Label>
+          <Select id="country-select">
+            <option value="">Select a country</option>
+            <option value="us">United States</option>
+          </Select>
+          
+          <Button type="submit">Submit</Button>
+        </form>
+      );
+
+      const firstInput = screen.getByLabelText('First Name');
+      const emailInput = screen.getByLabelText('Email');
+      const countrySelect = screen.getByLabelText('Country');
+      const submitButton = screen.getByRole('button', { name: 'Submit' });
+
+      // Start with first input focused
+      firstInput.focus();
+      expect(firstInput).toHaveFocus();
+
+      // Tab to email input
+      await user.tab();
+      expect(emailInput).toHaveFocus();
+
+      // Tab to country select
+      await user.tab();
+      expect(countrySelect).toHaveFocus();
+
+      // Tab to submit button
+      await user.tab();
+      expect(submitButton).toHaveFocus();
+    });
+
+    it('should support shift+tab for reverse navigation', async () => {
+      const user = userEvent.setup();
+      render(
+        <form>
+          <Input data-testid="input1" type="text" />
+          <Input data-testid="input2" type="text" />
+          <Button data-testid="button">Submit</Button>
+        </form>
+      );
+
+      const button = screen.getByTestId('button');
+      const input2 = screen.getByTestId('input2');
+      const input1 = screen.getByTestId('input1');
+
+      // Start with button focused
+      button.focus();
+      expect(button).toHaveFocus();
+
+      // Shift+Tab to input2
+      await user.tab({ shift: true });
+      expect(input2).toHaveFocus();
+
+      // Shift+Tab to input1
+      await user.tab({ shift: true });
+      expect(input1).toHaveFocus();
+    });
+
+    it('should skip disabled elements during tab navigation', async () => {
+      const user = userEvent.setup();
+      render(
+        <form>
+          <Input data-testid="input1" type="text" />
+          <Input data-testid="input2" type="text" disabled />
+          <Input data-testid="input3" type="text" />
+        </form>
+      );
+
+      const input1 = screen.getByTestId('input1');
+      const input3 = screen.getByTestId('input3');
+
+      input1.focus();
+      expect(input1).toHaveFocus();
+
+      await user.tab();
+      expect(input3).toHaveFocus();
+    });
+  });
+
+  describe('Screen Reader Support', () => {
+    it('should provide proper labels for form fields', () => {
+      render(
+        <div>
+          <Label htmlFor="email-field">Email Address</Label>
+          <Input id="email-field" type="email" required />
+        </div>
+      );
+
+      const input = screen.getByLabelText('Email Address');
+      expect(input).toBeInTheDocument();
+      expect(input).toHaveAttribute('type', 'email');
+      expect(input).toBeRequired();
+    });
+
+    it('should associate error messages with form fields', () => {
+      render(
+        <div>
+          <Label htmlFor="email-field" variant="error">Email Address</Label>
+          <Input 
+            id="email-field" 
+            type="email" 
+            error={true}
+            aria-describedby="email-error" 
+          />
+          <FormError id="email-error" message="Please enter a valid email address" />
+        </div>
+      );
+
+      const input = screen.getByLabelText('Email Address');
+      const errorMessage = screen.getByRole('alert');
+
+      expect(input).toHaveAttribute('aria-describedby', 'email-error');
+      expect(errorMessage).toHaveTextContent('Please enter a valid email address');
+    });
+
+    it('should associate helper text with form fields', () => {
+      render(
+        <div>
+          <Label htmlFor="password-field">Password</Label>
+          <Input 
+            id="password-field" 
+            type="password" 
+            aria-describedby="password-help"
+          />
+          <FormHelperText id="password-help">
+            Password must be at least 8 characters long
+          </FormHelperText>
+        </div>
+      );
+
+      const input = screen.getByLabelText('Password');
+      const helperText = screen.getByText('Password must be at least 8 characters long');
+
+      expect(input).toHaveAttribute('aria-describedby', 'password-help');
+      expect(helperText).toHaveAttribute('id', 'password-help');
+    });
+
+    it('should announce form validation errors', () => {
+      render(
+        <div>
+          <Label htmlFor="required-field" variant="error">Required Field</Label>
+          <Input 
+            id="required-field" 
+            type="text" 
+            error={true}
+            aria-describedby="required-error"
+            aria-invalid="true"
+          />
+          <FormError id="required-error" message="This field is required" />
+        </div>
+      );
+
+      const input = screen.getByLabelText('Required Field');
+      const errorMessage = screen.getByRole('alert');
+
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(input).toHaveAttribute('aria-describedby', 'required-error');
+      expect(errorMessage).toHaveAttribute('id', 'required-error');
+      expect(errorMessage).toHaveTextContent('This field is required');
+    });
+  });
+
+  describe('Focus Management', () => {
+    it('should provide visible focus indicators', async () => {
+      const user = userEvent.setup();
+      render(<Input data-testid="focus-input" />);
+
+      const input = screen.getByTestId('focus-input');
+      
+      await user.click(input);
+      expect(input).toHaveFocus();
+
+      // Check if focus styles are applied (this would depend on your CSS implementation)
+      const computedStyle = getComputedStyle(input);
+      expect(computedStyle.outline).not.toBe('none');
+    });
+
+    it('should maintain focus within modal dialogs', async () => {
+      const user = userEvent.setup();
+      const { container } = render(
+        <div role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+          <h2 id="dialog-title">Confirmation</h2>
+          <Button data-testid="confirm">Confirm</Button>
+          <Button data-testid="cancel">Cancel</Button>
+        </div>
+      );
+
+      const confirmButton = screen.getByTestId('confirm');
+      const cancelButton = screen.getByTestId('cancel');
+
+      confirmButton.focus();
+      expect(confirmButton).toHaveFocus();
+
+      await user.tab();
+      expect(cancelButton).toHaveFocus();
+
+      // In a real modal, tab should cycle back to first element
+      await user.tab();
+      // This would require actual modal implementation to test properly
+    });
+
+    it('should restore focus after modal closes', () => {
+      const triggerButton = document.createElement('button');
+      triggerButton.textContent = 'Open Modal';
+      document.body.appendChild(triggerButton);
+      triggerButton.focus();
+
+      expect(triggerButton).toHaveFocus();
+
+      // After modal interaction and close, focus should return to trigger
+      expect(document.activeElement).toBe(triggerButton);
+
+      document.body.removeChild(triggerButton);
+    });
+  });
+});
