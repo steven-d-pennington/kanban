@@ -15,18 +15,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           // Base styles
           'flex h-10 w-full rounded-md border px-3 py-2 text-sm transition-colors',
           'file:border-0 file:bg-transparent file:text-sm file:font-medium',
-          'placeholder:text-gray-500 dark:placeholder:text-gray-400',
+          'placeholder:text-gray-600 dark:placeholder:text-gray-300',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
           'disabled:cursor-not-allowed disabled:opacity-50',
-          // Light mode styles - improved contrast
+          // Light mode styles
           'bg-white text-gray-900 border-gray-300',
           'focus-visible:ring-blue-500 focus-visible:ring-offset-white',
-          // Dark mode styles - improved contrast
-          'dark:bg-gray-900 dark:text-white dark:border-gray-600',
+          // Dark mode styles
+          'dark:bg-gray-800 dark:text-white dark:border-gray-600',
           'dark:focus-visible:ring-blue-400 dark:focus-visible:ring-offset-gray-900',
-          // Variant styles - improved contrast
+          // Variant styles
           {
-            'border-red-500 focus-visible:ring-red-500 text-red-900 bg-red-50 dark:border-red-500 dark:focus-visible:ring-red-400 dark:text-red-100 dark:bg-red-950':
+            'border-red-300 focus-visible:ring-red-500 dark:border-red-600 dark:focus-visible:ring-red-400':
               variant === 'destructive' || error,
           },
           className
