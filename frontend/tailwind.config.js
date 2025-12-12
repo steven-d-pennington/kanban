@@ -7,80 +7,182 @@ export default {
   theme: {
     extend: {
       colors: {
-        // WCAG AA compliant color combinations
-        accessible: {
-          // High contrast combinations (WCAG AAA - 7:1 ratio)
-          'text-primary': '#000000',
-          'text-secondary': '#2d3748',
-          'text-muted': '#4a5568',
-          'bg-primary': '#ffffff',
-          'bg-secondary': '#f7fafc',
-          'bg-muted': '#edf2f7',
-          
-          // Interactive elements with proper contrast
-          'link-default': '#2b6cb0',
-          'link-hover': '#2c5282',
-          'link-visited': '#553c9a',
-          'link-active': '#1a365d',
-          
-          // Status colors with accessible contrast
-          'success-text': '#22543d',
-          'success-bg': '#f0fff4',
-          'success-border': '#9ae6b4',
-          
-          'warning-text': '#744210',
-          'warning-bg': '#fffbeb',
-          'warning-border': '#f6d55c',
-          
-          'error-text': '#742a2a',
-          'error-bg': '#fed7d7',
-          'error-border': '#fc8181',
-          
-          'info-text': '#2a69ac',
-          'info-bg': '#ebf8ff',
-          'info-border': '#90cdf4',
-          
-          // Focus and interaction states
-          'focus-ring': '#3182ce',
-          'focus-bg': '#bee3f8',
-          'hover-overlay': 'rgba(0, 0, 0, 0.05)',
-          'active-overlay': 'rgba(0, 0, 0, 0.1)',
+        // Accessible color combinations with proper contrast ratios
+        'accessible-primary': {
+          'text': '#1a1a1a',
+          'bg': '#ffffff',
+          'border': '#e5e7eb',
+          'hover': '#f9fafb',
+          'active': '#f3f4f6',
+        },
+        'accessible-secondary': {
+          'text': '#ffffff',
+          'bg': '#374151',
+          'border': '#4b5563',
+          'hover': '#4b5563',
+          'active': '#6b7280',
+        },
+        'accessible-tertiary': {
+          'text': '#374151',
+          'bg': '#f9fafb',
+          'border': '#d1d5db',
+          'hover': '#f3f4f6',
+          'active': '#e5e7eb',
+        },
+        'accessible-neutral': {
+          'text': '#1f2937',
+          'bg': '#f3f4f6',
+          'border': '#d1d5db',
+          'hover': '#e5e7eb',
+          'active': '#d1d5db',
+        },
+        'accessible-brand': {
+          'text': '#ffffff',
+          'bg': '#2563eb',
+          'border': '#3b82f6',
+          'hover': '#1d4ed8',
+          'active': '#1e40af',
+        },
+        'accessible-success': {
+          'text': '#065f46',
+          'bg': '#d1fae5',
+          'border': '#34d399',
+          'hover': '#a7f3d0',
+          'active': '#6ee7b7',
+        },
+        'accessible-warning': {
+          'text': '#92400e',
+          'bg': '#fef3c7',
+          'border': '#fbbf24',
+          'hover': '#fde68a',
+          'active': '#fcd34d',
+        },
+        'accessible-error': {
+          'text': '#991b1b',
+          'bg': '#fecaca',
+          'border': '#f87171',
+          'hover': '#fca5a5',
+          'active': '#ef4444',
+        },
+        'accessible-info': {
+          'text': '#1e40af',
+          'bg': '#dbeafe',
+          'border': '#60a5fa',
+          'hover': '#bfdbfe',
+          'active': '#93c5fd',
         },
         
-        // Dark mode accessible colors
-        'accessible-dark': {
-          'text-primary': '#ffffff',
-          'text-secondary': '#e2e8f0',
-          'text-muted': '#cbd5e0',
-          'bg-primary': '#1a202c',
-          'bg-secondary': '#2d3748',
-          'bg-muted': '#4a5568',
-          
-          'link-default': '#63b3ed',
-          'link-hover': '#90cdf4',
-          'link-visited': '#b794f6',
-          'link-active': '#bee3f8',
-          
-          'success-text': '#9ae6b4',
-          'success-bg': '#22543d',
-          'success-border': '#38a169',
-          
-          'warning-text': '#f6d55c',
-          'warning-bg': '#744210',
-          'warning-border': '#d69e2e',
-          
-          'error-text': '#feb2b2',
-          'error-bg': '#742a2a',
-          'error-border': '#e53e3e',
-          
-          'info-text': '#90cdf4',
-          'info-bg': '#2a69ac',
-          'info-border': '#4299e1',
-          
-          'focus-ring': '#63b3ed',
-          'focus-bg': '#2c5282',
-          'hover-overlay': 'rgba(255, 255, 255, 0.05)',
-          'active-overlay': 'rgba(255, 255, 255, 0.1)',
+        // Dark mode accessible combinations
+        'accessible-dark-primary': {
+          'text': '#f9fafb',
+          'bg': '#111827',
+          'border': '#374151',
+          'hover': '#1f2937',
+          'active': '#374151',
+        },
+        'accessible-dark-secondary': {
+          'text': '#111827',
+          'bg': '#e5e7eb',
+          'border': '#9ca3af',
+          'hover': '#d1d5db',
+          'active': '#9ca3af',
+        },
+        'accessible-dark-tertiary': {
+          'text': '#e5e7eb',
+          'bg': '#1f2937',
+          'border': '#4b5563',
+          'hover': '#374151',
+          'active': '#4b5563',
+        },
+        'accessible-dark-neutral': {
+          'text': '#f3f4f6',
+          'bg': '#374151',
+          'border': '#4b5563',
+          'hover': '#4b5563',
+          'active': '#6b7280',
+        },
+        'accessible-dark-brand': {
+          'text': '#ffffff',
+          'bg': '#3b82f6',
+          'border': '#60a5fa',
+          'hover': '#2563eb',
+          'active': '#1d4ed8',
+        },
+        'accessible-dark-success': {
+          'text': '#6ee7b7',
+          'bg': '#064e3b',
+          'border': '#10b981',
+          'hover': '#047857',
+          'active': '#059669',
+        },
+        'accessible-dark-warning': {
+          'text': '#fcd34d',
+          'bg': '#78350f',
+          'border': '#f59e0b',
+          'hover': '#92400e',
+          'active': '#b45309',
+        },
+        'accessible-dark-error': {
+          'text': '#fca5a5',
+          'bg': '#7f1d1d',
+          'border': '#dc2626',
+          'hover': '#991b1b',
+          'active': '#b91c1c',
+        },
+        'accessible-dark-info': {
+          'text': '#93c5fd',
+          'bg': '#1e3a8a',
+          'border': '#3b82f6',
+          'hover': '#1e40af',
+          'active': '#1d4ed8',
+        },
+        
+        // Link colors with proper contrast
+        'accessible-links': {
+          'default': '#2563eb',
+          'hover': '#1d4ed8',
+          'visited': '#7c3aed',
+          'active': '#1e40af',
+          'focus': '#2563eb',
+        },
+        'accessible-dark-links': {
+          'default': '#60a5fa',
+          'hover': '#3b82f6',
+          'visited': '#a78bfa',
+          'active': '#2563eb',
+          'focus': '#60a5fa',
+        },
+        
+        // Text color variants
+        'text-accessible': {
+          'primary': '#111827',
+          'secondary': '#374151',
+          'tertiary': '#6b7280',
+          'muted': '#9ca3af',
+          'inverse': '#ffffff',
+        },
+        'text-accessible-dark': {
+          'primary': '#f9fafb',
+          'secondary': '#e5e7eb',
+          'tertiary': '#d1d5db',
+          'muted': '#9ca3af',
+          'inverse': '#111827',
+        },
+        
+        // Background color variants
+        'bg-accessible': {
+          'primary': '#ffffff',
+          'secondary': '#f9fafb',
+          'tertiary': '#f3f4f6',
+          'muted': '#e5e7eb',
+          'overlay': 'rgba(0, 0, 0, 0.5)',
+        },
+        'bg-accessible-dark': {
+          'primary': '#111827',
+          'secondary': '#1f2937',
+          'tertiary': '#374151',
+          'muted': '#4b5563',
+          'overlay': 'rgba(255, 255, 255, 0.1)',
         },
       },
       
@@ -134,16 +236,20 @@ export default {
       },
       
       boxShadow: {
-        'accessible-focus': '0 0 0 3px var(--color-accessible-focus-ring)',
-        'accessible-focus-dark': '0 0 0 3px var(--color-accessible-dark-focus-ring)',
-        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'focus-accessible': '0 0 0 3px rgb(37 99 235 / 0.5)',
+        'focus-accessible-dark': '0 0 0 3px rgb(96 165 250 / 0.5)',
+        'card': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06)',
+        'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -1px rgb(0 0 0 / 0.06)',
+        'elevation-1': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+        'elevation-2': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+        'elevation-3': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
       },
       
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'slide-down': 'slideDown 0.3s ease-out',
+        'scale-in': 'scaleIn 0.2s ease-out',
       },
       
       keyframes: {
@@ -159,92 +265,171 @@ export default {
           '0%': { transform: 'translateY(-10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
+        scaleIn: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
       },
     },
   },
   plugins: [
     function({ addUtilities, addComponents, theme }) {
-      // Accessible text/background combinations
+      // Accessible color combination utilities
       addUtilities({
-        '.text-accessible-primary': {
-          'color': 'var(--color-accessible-text-primary)',
-          'background-color': 'var(--color-accessible-bg-primary)',
+        '.theme-primary': {
+          'color': theme('colors.accessible-primary.text'),
+          'background-color': theme('colors.accessible-primary.bg'),
+          'border-color': theme('colors.accessible-primary.border'),
         },
-        '.text-accessible-secondary': {
-          'color': 'var(--color-accessible-text-secondary)',
-          'background-color': 'var(--color-accessible-bg-secondary)',
+        '.theme-secondary': {
+          'color': theme('colors.accessible-secondary.text'),
+          'background-color': theme('colors.accessible-secondary.bg'),
+          'border-color': theme('colors.accessible-secondary.border'),
         },
-        '.text-accessible-muted': {
-          'color': 'var(--color-accessible-text-muted)',
-          'background-color': 'var(--color-accessible-bg-muted)',
+        '.theme-tertiary': {
+          'color': theme('colors.accessible-tertiary.text'),
+          'background-color': theme('colors.accessible-tertiary.bg'),
+          'border-color': theme('colors.accessible-tertiary.border'),
+        },
+        '.theme-brand': {
+          'color': theme('colors.accessible-brand.text'),
+          'background-color': theme('colors.accessible-brand.bg'),
+          'border-color': theme('colors.accessible-brand.border'),
+        },
+        '.theme-success': {
+          'color': theme('colors.accessible-success.text'),
+          'background-color': theme('colors.accessible-success.bg'),
+          'border-color': theme('colors.accessible-success.border'),
+        },
+        '.theme-warning': {
+          'color': theme('colors.accessible-warning.text'),
+          'background-color': theme('colors.accessible-warning.bg'),
+          'border-color': theme('colors.accessible-warning.border'),
+        },
+        '.theme-error': {
+          'color': theme('colors.accessible-error.text'),
+          'background-color': theme('colors.accessible-error.bg'),
+          'border-color': theme('colors.accessible-error.border'),
+        },
+        '.theme-info': {
+          'color': theme('colors.accessible-info.text'),
+          'background-color': theme('colors.accessible-info.bg'),
+          'border-color': theme('colors.accessible-info.border'),
         },
         '.link-accessible': {
-          'color': 'var(--color-accessible-link-default)',
+          'color': theme('colors.accessible-links.default'),
           'text-decoration': 'underline',
           'text-underline-offset': '2px',
           '&:hover': {
-            'color': 'var(--color-accessible-link-hover)',
+            'color': theme('colors.accessible-links.hover'),
           },
           '&:visited': {
-            'color': 'var(--color-accessible-link-visited)',
+            'color': theme('colors.accessible-links.visited'),
           },
           '&:active': {
-            'color': 'var(--color-accessible-link-active)',
+            'color': theme('colors.accessible-links.active'),
+          },
+          '&:focus': {
+            'outline': `2px solid ${theme('colors.accessible-links.focus')}`,
+            'outline-offset': '2px',
           },
         },
       });
       
-      // Accessible focus states
+      // Accessible component utilities
       addComponents({
-        '.focus-accessible': {
-          '&:focus-visible': {
-            'outline': '2px solid var(--color-accessible-focus-ring)',
-            'outline-offset': '2px',
-            'box-shadow': 'var(--shadow-accessible-focus)',
-          },
-        },
         '.btn-accessible': {
           'display': 'inline-flex',
           'align-items': 'center',
           'justify-content': 'center',
-          'padding': '0.5rem 1rem',
+          'padding': '0.75rem 1.5rem',
           'font-size': '0.875rem',
           'font-weight': '500',
-          'line-height': '1.5',
-          'border-radius': '0.375rem',
+          'line-height': '1.25',
+          'border-radius': theme('borderRadius.md'),
           'border': '1px solid transparent',
           'cursor': 'pointer',
           'transition': 'all 0.2s ease-in-out',
           'min-height': '44px',
           'min-width': '44px',
+          'text-decoration': 'none',
           '&:focus-visible': {
-            'outline': '2px solid var(--color-accessible-focus-ring)',
+            'outline': `2px solid ${theme('colors.accessible-links.focus')}`,
             'outline-offset': '2px',
           },
           '&:disabled': {
             'opacity': '0.6',
             'cursor': 'not-allowed',
+            'pointer-events': 'none',
           },
         },
-        '.status-success': {
-          'color': 'var(--color-accessible-success-text)',
-          'background-color': 'var(--color-accessible-success-bg)',
-          'border-color': 'var(--color-accessible-success-border)',
+        '.btn-primary': {
+          'color': theme('colors.accessible-brand.text'),
+          'background-color': theme('colors.accessible-brand.bg'),
+          'border-color': theme('colors.accessible-brand.border'),
+          '&:hover': {
+            'background-color': theme('colors.accessible-brand.hover'),
+          },
+          '&:active': {
+            'background-color': theme('colors.accessible-brand.active'),
+          },
         },
-        '.status-warning': {
-          'color': 'var(--color-accessible-warning-text)',
-          'background-color': 'var(--color-accessible-warning-bg)',
-          'border-color': 'var(--color-accessible-warning-border)',
+        '.btn-secondary': {
+          'color': theme('colors.accessible-secondary.text'),
+          'background-color': theme('colors.accessible-secondary.bg'),
+          'border-color': theme('colors.accessible-secondary.border'),
+          '&:hover': {
+            'background-color': theme('colors.accessible-secondary.hover'),
+          },
+          '&:active': {
+            'background-color': theme('colors.accessible-secondary.active'),
+          },
         },
-        '.status-error': {
-          'color': 'var(--color-accessible-error-text)',
-          'background-color': 'var(--color-accessible-error-bg)',
-          'border-color': 'var(--color-accessible-error-border)',
+        '.btn-outline': {
+          'color': theme('colors.accessible-brand.bg'),
+          'background-color': 'transparent',
+          'border-color': theme('colors.accessible-brand.bg'),
+          '&:hover': {
+            'color': theme('colors.accessible-brand.text'),
+            'background-color': theme('colors.accessible-brand.bg'),
+          },
         },
-        '.status-info': {
-          'color': 'var(--color-accessible-info-text)',
-          'background-color': 'var(--color-accessible-info-bg)',
-          'border-color': 'var(--color-accessible-info-border)',
+        '.card-accessible': {
+          'background-color': theme('colors.bg-accessible.primary'),
+          'border': `1px solid ${theme('colors.accessible-primary.border')}`,
+          'border-radius': theme('borderRadius.lg'),
+          'box-shadow': theme('boxShadow.card'),
+          'padding': '1.5rem',
+          'transition': 'all 0.2s ease-in-out',
+          '&:hover': {
+            'box-shadow': theme('boxShadow.card-hover'),
+          },
+        },
+        '.input-accessible': {
+          'display': 'block',
+          'width': '100%',
+          'padding': '0.75rem',
+          'font-size': '1rem',
+          'line-height': '1.5',
+          'color': theme('colors.text-accessible.primary'),
+          'background-color': theme('colors.bg-accessible.primary'),
+          'border': `1px solid ${theme('colors.accessible-primary.border')}`,
+          'border-radius': theme('borderRadius.md'),
+          'min-height': '44px',
+          'transition': 'all 0.2s ease-in-out',
+          '&:focus': {
+            'outline': `2px solid ${theme('colors.accessible-links.focus')}`,
+            'outline-offset': '-2px',
+            'border-color': theme('colors.accessible-links.focus'),
+          },
+          '&::placeholder': {
+            'color': theme('colors.text-accessible.muted'),
+          },
+          '&:disabled': {
+            'opacity': '0.6',
+            'cursor': 'not-allowed',
+            'background-color': theme('colors.bg-accessible.muted'),
+          },
         },
       });
     },
