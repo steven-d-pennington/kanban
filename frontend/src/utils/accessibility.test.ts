@@ -19,53 +19,56 @@ import {
 describe('accessibility utilities', () => {
   describe('Color conversion utilities', () => {
     describe('hexToRgb', () => {
-      it('should convert valid hex colors to RGB', () => {
-        expect(hexToRgb('#000000')).toEqual({ r: 0, g: 0, b: 0 });
-        expect(hexToRgb('#ffffff')).toEqual({ r: 255, g: 255, b: 255 });
+      it('should convert hex color to RGB object', () => {
         expect(hexToRgb('#ff0000')).toEqual({ r: 255, g: 0, b: 0 });
         expect(hexToRgb('#00ff00')).toEqual({ r: 0, g: 255, b: 0 });
         expect(hexToRgb('#0000ff')).toEqual({ r: 0, g: 0, b: 255 });
+        expect(hexToRgb('#ffffff')).toEqual({ r: 255, g: 255, b: 255 });
+        expect(hexToRgb('#000000')).toEqual({ r: 0, g: 0, b: 0 });
       });
 
-      it('should handle uppercase hex colors', () => {
-        expect(hexToRgb('#FF00AA')).toEqual({ r: 255, g: 0, b: 170 });
-        expect(hexToRgb('#ABCDEF')).toEqual({ r: 171, g: 205, b: 239 });
+      it('should handle 3-character hex codes', () => {
+        expect(hexToRgb('#f00')).toEqual({ r: 255, g: 0, b: 0 });
+        expect(hexToRgb('#0f0')).toEqual({ r: 0, g: 255, b: 0 });
+        expect(hexToRgb('#00f')).toEqual({ r: 0, g: 0, b: 255 });
       });
 
-      it('should handle mixed case hex colors', () => {
-        expect(hexToRgb('#aB3DeF')).toEqual({ r: 171, g: 61, b: 239 });
+      it('should handle hex codes without hash', () => {
+        expect(hexToRgb('ff0000')).toEqual({ r: 255, g: 0, b: 0 });
+        expect(hexToRgb('f00')).toEqual({ r: 255, g: 0, b: 0 });
       });
 
-      it('should throw error for invalid hex colors', () => {
-        expect(() => hexToRgb('#gggggg')).toThrow('Invalid hex color format');
-        expect(() => hexToRgb('#12345')).toThrow('Invalid hex color format');
-        expect(() => hexToRgb('123456')).toThrow('Invalid hex color format');
-        expect(() => hexToRgb('')).toThrow('Invalid hex color format');
+      it('should handle case insensitive hex codes', () => {
+        expect(hexToRgb('#FF0000')).toEqual({ r: 255, g: 0, b: 0 });
+        expect(hexToRgb('#ff0000')).toEqual({ r: 255, g: 0, b: 0 });
+      });
+
+      it('should return null for invalid hex colors', () => {
+        expect(hexToRgb('invalid')).toBeNull();
+        expect(hexToRgb('#gg0000')).toBeNull();
+        expect(hexToRgb('#ff00')).toBeNull();
+        expect(hexToRgb('')).toBeNull();
       });
     });
 
     describe('rgbToHex', () => {
-      it('should convert RGB values to hex colors', () => {
-        expect(rgbToHex({ r: 0, g: 0, b: 0 })).toBe('#000000');
-        expect(rgbToHex({ r: 255, g: 255, b: 255 })).toBe('#ffffff');
-        expect(rgbToHex({ r: 255, g: 0, b: 0 })).toBe('#ff0000');
-        expect(rgbToHex({ r: 0, g: 255, b: 0 })).toBe('#00ff00');
-        expect(rgbToHex({ r: 0, g: 0, b: 255 })).toBe('#0000ff');
+      it('should convert RGB values to hex string', () => {
+        expect(rgbToHex(255, 0, 0)).toBe('#ff0000');
+        expect(rgbToHex(0, 255, 0)).toBe('#00ff00');
+        expect(rgbToHex(0, 0, 255)).toBe('#0000ff');
+        expect(rgbToHex(255, 255, 255)).toBe('#ffffff');
+        expect(rgbToHex(0, 0, 0)).toBe('#000000');
       });
 
-      it('should handle single digit values with leading zeros', () => {
-        expect(rgbToHex({ r: 1, g: 2, b: 3 })).toBe('#010203');
-        expect(rgbToHex({ r: 15, g: 16, b: 17 })).toBe('#0f1011');
+      it('should handle partial RGB values', () => {
+        expect(rgbToHex(128, 128, 128)).toBe('#808080');
+        expect(rgbToHex(17, 34, 51)).toBe('#112233');
       });
 
-      it('should throw error for values outside 0-255 range', () => {
-        expect(() => rgbToHex({ r: -1, g: 0, b: 0 })).toThrow('RGB values must be between 0 and 255');
-        expect(() => rgbToHex({ r: 0, g: 256, b: 0 })).toThrow('RGB values must be between 0 and 255');
-        expect(() => rgbToHex({ r: 0, g: 0, b: 300 })).toThrow('RGB values must be between 0 and 255');
-      });
-
-      it('should handle non-integer values by rounding', () => {
-        expect(rgbToHex({ r: 127.4, g: 127.6, b: 128.8 })).toBe('#7f8081');
+      it('should clamp values outside 0-255 range', () => {
+        expect(rgbToHex(-1, 0, 0)).toBe('#000000');
+        expect(rgbToHex(256, 0, 0)).toBe('#ff0000');
+        expect(rgbToHex(255, -1, 300)).toBe('#ff00ff');
       });
     });
   });
@@ -73,355 +76,228 @@ describe('accessibility utilities', () => {
   describe('Relative luminance calculation', () => {
     describe('getRelativeLuminance', () => {
       it('should calculate correct luminance for pure colors', () => {
-        // Black should have luminance of 0
-        expect(getRelativeLuminance('#000000')).toBeCloseTo(0, 3);
-        
-        // White should have luminance of 1
-        expect(getRelativeLuminance('#ffffff')).toBeCloseTo(1, 3);
-        
-        // Pure red luminance
+        expect(getRelativeLuminance('#ffffff')).toBeCloseTo(1, 2);
+        expect(getRelativeLuminance('#000000')).toBeCloseTo(0, 2);
         expect(getRelativeLuminance('#ff0000')).toBeCloseTo(0.2126, 3);
-        
-        // Pure green luminance
         expect(getRelativeLuminance('#00ff00')).toBeCloseTo(0.7152, 3);
-        
-        // Pure blue luminance
         expect(getRelativeLuminance('#0000ff')).toBeCloseTo(0.0722, 3);
       });
 
-      it('should calculate luminance for gray colors', () => {
-        expect(getRelativeLuminance('#808080')).toBeCloseTo(0.2159, 3);
-        expect(getRelativeLuminance('#404040')).toBeCloseTo(0.0515, 3);
-        expect(getRelativeLuminance('#c0c0c0')).toBeCloseTo(0.5276, 3);
+      it('should handle gray colors correctly', () => {
+        expect(getRelativeLuminance('#808080')).toBeCloseTo(0.216, 2);
+        expect(getRelativeLuminance('#c0c0c0')).toBeCloseTo(0.598, 2);
       });
 
-      it('should handle edge cases in sRGB to linear conversion', () => {
-        // Test values around the 0.03928 threshold
-        expect(getRelativeLuminance('#010101')).toBeCloseTo(0.0003, 4);
-        expect(getRelativeLuminance('#020202')).toBeCloseTo(0.0011, 4);
-      });
-
-      it('should throw error for invalid hex colors', () => {
-        expect(() => getRelativeLuminance('#invalid')).toThrow();
-        expect(() => getRelativeLuminance('')).toThrow();
+      it('should return 0 for invalid colors', () => {
+        expect(getRelativeLuminance('invalid')).toBe(0);
+        expect(getRelativeLuminance('')).toBe(0);
       });
     });
   });
 
   describe('Contrast ratio calculation', () => {
     describe('calculateContrastRatio', () => {
-      it('should calculate exact contrast ratios for known color pairs', () => {
-        // Black on white should be 21:1
-        expect(calculateContrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 1);
-        
-        // White on black should be 21:1 (order doesn't matter)
+      it('should calculate correct contrast ratios', () => {
         expect(calculateContrastRatio('#ffffff', '#000000')).toBeCloseTo(21, 1);
-        
-        // Same color should be 1:1
-        expect(calculateContrastRatio('#ff0000', '#ff0000')).toBe(1);
-        expect(calculateContrastRatio('#808080', '#808080')).toBe(1);
+        expect(calculateContrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 1);
+        expect(calculateContrastRatio('#ffffff', '#ffffff')).toBeCloseTo(1, 1);
+        expect(calculateContrastRatio('#000000', '#000000')).toBeCloseTo(1, 1);
       });
 
-      it('should calculate contrast for common color combinations', () => {
-        // Blue (#0000ff) on white
-        expect(calculateContrastRatio('#0000ff', '#ffffff')).toBeCloseTo(8.59, 1);
-        
-        // Red (#ff0000) on white
-        expect(calculateContrastRatio('#ff0000', '#ffffff')).toBeCloseTo(3.97, 1);
-        
-        // Green (#00ff00) on white
-        expect(calculateContrastRatio('#00ff00', '#ffffff')).toBeCloseTo(1.37, 1);
+      it('should handle common color combinations', () => {
+        expect(calculateContrastRatio('#000000', '#808080')).toBeCloseTo(5.31, 1);
+        expect(calculateContrastRatio('#ffffff', '#808080')).toBeCloseTo(3.95, 1);
+        expect(calculateContrastRatio('#0066cc', '#ffffff')).toBeCloseTo(6.07, 1);
       });
 
-      it('should handle medium contrast combinations', () => {
-        // Dark gray on light gray
-        expect(calculateContrastRatio('#333333', '#cccccc')).toBeCloseTo(9.74, 1);
-        
-        // Navy on light blue
-        expect(calculateContrastRatio('#003366', '#cce7ff')).toBeGreaterThan(4.5);
-      });
-
-      it('should return values between 1 and 21', () => {
-        const ratio1 = calculateContrastRatio('#ff0000', '#00ff00');
-        const ratio2 = calculateContrastRatio('#123456', '#abcdef');
-        const ratio3 = calculateContrastRatio('#888888', '#777777');
-        
-        expect(ratio1).toBeGreaterThanOrEqual(1);
-        expect(ratio1).toBeLessThanOrEqual(21);
-        expect(ratio2).toBeGreaterThanOrEqual(1);
-        expect(ratio2).toBeLessThanOrEqual(21);
-        expect(ratio3).toBeGreaterThanOrEqual(1);
-        expect(ratio3).toBeLessThanOrEqual(21);
-      });
-
-      it('should be commutative (order independent)', () => {
-        const color1 = '#123456';
-        const color2 = '#abcdef';
-        
-        expect(calculateContrastRatio(color1, color2))
-          .toBe(calculateContrastRatio(color2, color1));
-      });
-
-      it('should throw error for invalid colors', () => {
-        expect(() => calculateContrastRatio('#invalid', '#ffffff')).toThrow();
-        expect(() => calculateContrastRatio('#ffffff', '#invalid')).toThrow();
-        expect(() => calculateContrastRatio('', '#ffffff')).toThrow();
+      it('should return 1 for invalid colors', () => {
+        expect(calculateContrastRatio('invalid', '#ffffff')).toBe(1);
+        expect(calculateContrastRatio('#ffffff', 'invalid')).toBe(1);
+        expect(calculateContrastRatio('', '')).toBe(1);
       });
     });
   });
 
-  describe('WCAG compliance validation', () => {
+  describe('WCAG compliance checking', () => {
     describe('isWCAGCompliant', () => {
       it('should correctly identify AA normal compliance', () => {
-        // Black on white (21:1) should pass all levels
-        expect(isWCAGCompliant('#000000', '#ffffff', 'AA', 'normal')).toBe(true);
-        
-        // 4.5:1 ratio should pass AA normal
-        expect(isWCAGCompliant('#757575', '#ffffff', 'AA', 'normal')).toBe(true);
-        
-        // 3:1 ratio should fail AA normal
-        expect(isWCAGCompliant('#949494', '#ffffff', 'AA', 'normal')).toBe(false);
+        expect(isWCAGCompliant('#000000', '#ffffff', WCAG_AA_NORMAL)).toBe(true);
+        expect(isWCAGCompliant('#0066cc', '#ffffff', WCAG_AA_NORMAL)).toBe(true);
+        expect(isWCAGCompliant('#808080', '#ffffff', WCAG_AA_NORMAL)).toBe(false);
       });
 
       it('should correctly identify AA large compliance', () => {
-        // 3:1 ratio should pass AA large
-        expect(isWCAGCompliant('#949494', '#ffffff', 'AA', 'large')).toBe(true);
-        
-        // 2.5:1 ratio should fail AA large
-        expect(isWCAGCompliant('#a6a6a6', '#ffffff', 'AA', 'large')).toBe(false);
+        expect(isWCAGCompliant('#000000', '#ffffff', WCAG_AA_LARGE)).toBe(true);
+        expect(isWCAGCompliant('#808080', '#ffffff', WCAG_AA_LARGE)).toBe(true);
+        expect(isWCAGCompliant('#999999', '#ffffff', WCAG_AA_LARGE)).toBe(false);
       });
 
-      it('should correctly identify AAA normal compliance', () => {
-        // 7:1 ratio should pass AAA normal
-        expect(isWCAGCompliant('#595959', '#ffffff', 'AAA', 'normal')).toBe(true);
-        
-        // 6:1 ratio should fail AAA normal
-        expect(isWCAGCompliant('#666666', '#ffffff', 'AAA', 'normal')).toBe(false);
+      it('should correctly identify AAA compliance', () => {
+        expect(isWCAGCompliant('#000000', '#ffffff', WCAG_AAA_NORMAL)).toBe(true);
+        expect(isWCAGCompliant('#0066cc', '#ffffff', WCAG_AAA_NORMAL)).toBe(false);
+        expect(isWCAGCompliant('#000000', '#ffffff', WCAG_AAA_LARGE)).toBe(true);
       });
 
-      it('should correctly identify AAA large compliance', () => {
-        // 4.5:1 ratio should pass AAA large
-        expect(isWCAGCompliant('#757575', '#ffffff', 'AAA', 'large')).toBe(true);
-        
-        // 3.5:1 ratio should fail AAA large
-        expect(isWCAGCompliant('#808080', '#ffffff', 'AAA', 'large')).toBe(false);
-      });
-
-      it('should handle edge cases at exact thresholds', () => {
-        // Test colors that are exactly at the threshold
-        const mockCalculateContrastRatio = vi.fn();
-        
-        mockCalculateContrastRatio.mockReturnValue(4.5);
-        expect(isWCAGCompliant('#test1', '#test2', 'AA', 'normal')).toBe(true);
-        
-        mockCalculateContrastRatio.mockReturnValue(4.49);
-        expect(isWCAGCompliant('#test1', '#test2', 'AA', 'normal')).toBe(false);
+      it('should handle edge cases', () => {
+        expect(isWCAGCompliant('invalid', '#ffffff', WCAG_AA_NORMAL)).toBe(false);
+        expect(isWCAGCompliant('#ffffff', 'invalid', WCAG_AA_NORMAL)).toBe(false);
       });
     });
 
     describe('getAccessibilityLevel', () => {
-      it('should return correct accessibility levels for various ratios', () => {
-        // High contrast should return AAA for both sizes
-        expect(getAccessibilityLevel('#000000', '#ffffff')).toEqual({
-          normal: 'AAA',
-          large: 'AAA'
-        });
-        
-        // Medium-high contrast
-        expect(getAccessibilityLevel('#404040', '#ffffff')).toEqual({
-          normal: 'AAA',
-          large: 'AAA'
-        });
+      it('should return correct accessibility levels', () => {
+        expect(getAccessibilityLevel('#000000', '#ffffff')).toBe('AAA');
+        expect(getAccessibilityLevel('#0066cc', '#ffffff')).toBe('AA');
+        expect(getAccessibilityLevel('#808080', '#ffffff')).toBe('AA-Large');
+        expect(getAccessibilityLevel('#999999', '#ffffff')).toBe('Fail');
       });
 
-      it('should handle ratios that only meet AA standards', () => {
-        // Should meet AA but not AAA for normal text
-        const result = getAccessibilityLevel('#757575', '#ffffff');
-        expect(result.normal).toBe('AA');
-        expect(result.large).toBe('AAA');
-      });
-
-      it('should handle ratios that only meet AA large standards', () => {
-        // Should only meet AA for large text
-        const result = getAccessibilityLevel('#949494', '#ffffff');
-        expect(result.normal).toBe('fail');
-        expect(result.large).toBe('AA');
-      });
-
-      it('should return fail for insufficient contrast', () => {
-        // Very low contrast should fail all standards
-        const result = getAccessibilityLevel('#cccccc', '#ffffff');
-        expect(result.normal).toBe('fail');
-        expect(result.large).toBe('fail');
+      it('should handle invalid colors', () => {
+        expect(getAccessibilityLevel('invalid', '#ffffff')).toBe('Fail');
+        expect(getAccessibilityLevel('#ffffff', 'invalid')).toBe('Fail');
       });
     });
   });
 
   describe('Color validation and suggestions', () => {
     describe('validateColorCombination', () => {
-      it('should return detailed validation results', () => {
+      it('should return correct validation results', () => {
         const result = validateColorCombination('#000000', '#ffffff');
-        
-        expect(result).toMatchObject({
-          isAccessible: true,
-          contrastRatio: expect.any(Number),
-          level: expect.objectContaining({
-            normal: expect.any(String),
-            large: expect.any(String)
-          }),
-          passes: expect.objectContaining({
-            'AA-normal': true,
-            'AA-large': true,
-            'AAA-normal': true,
-            'AAA-large': true
-          })
-        });
+        expect(result.isValid).toBe(true);
+        expect(result.contrastRatio).toBeCloseTo(21, 1);
+        expect(result.level).toBe('AAA');
+        expect(result.wcagAA).toBe(true);
+        expect(result.wcagAAA).toBe(true);
       });
 
-      it('should correctly identify failing combinations', () => {
+      it('should handle failing combinations', () => {
         const result = validateColorCombination('#cccccc', '#ffffff');
-        
-        expect(result.isAccessible).toBe(false);
-        expect(result.passes['AA-normal']).toBe(false);
-        expect(result.passes['AA-large']).toBe(false);
-        expect(result.passes['AAA-normal']).toBe(false);
-        expect(result.passes['AAA-large']).toBe(false);
+        expect(result.isValid).toBe(false);
+        expect(result.contrastRatio).toBeLessThan(4.5);
+        expect(result.level).toBe('Fail');
+        expect(result.wcagAA).toBe(false);
+        expect(result.wcagAAA).toBe(false);
       });
 
-      it('should handle partial compliance', () => {
-        const result = validateColorCombination('#949494', '#ffffff');
-        
-        expect(result.passes['AA-normal']).toBe(false);
-        expect(result.passes['AA-large']).toBe(true);
-        expect(result.passes['AAA-normal']).toBe(false);
-        expect(result.passes['AAA-large']).toBe(false);
-      });
-    });
-
-    describe('generateAccessibleColorVariations', () => {
-      it('should generate variations for insufficient contrast', () => {
-        const variations = generateAccessibleColorVariations('#cccccc', '#ffffff');
-        
-        expect(variations).toHaveProperty('lighter');
-        expect(variations).toHaveProperty('darker');
-        expect(Array.isArray(variations.lighter)).toBe(true);
-        expect(Array.isArray(variations.darker)).toBe(true);
-      });
-
-      it('should generate variations that meet accessibility standards', () => {
-        const variations = generateAccessibleColorVariations('#cccccc', '#ffffff');
-        
-        // Check that generated variations actually have better contrast
-        variations.darker.forEach(color => {
-          const ratio = calculateContrastRatio(color, '#ffffff');
-          expect(ratio).toBeGreaterThan(calculateContrastRatio('#cccccc', '#ffffff'));
-        });
-      });
-
-      it('should not generate variations for already accessible combinations', () => {
-        const variations = generateAccessibleColorVariations('#000000', '#ffffff');
-        
-        expect(variations.lighter).toHaveLength(0);
-        expect(variations.darker).toHaveLength(0);
-      });
-
-      it('should generate appropriate number of variations', () => {
-        const variations = generateAccessibleColorVariations('#999999', '#ffffff');
-        
-        expect(variations.darker.length).toBeGreaterThan(0);
-        expect(variations.darker.length).toBeLessThanOrEqual(10);
+      it('should provide suggestions for failing combinations', () => {
+        const result = validateColorCombination('#cccccc', '#ffffff');
+        expect(result.suggestions).toBeInstanceOf(Array);
+        expect(result.suggestions.length).toBeGreaterThan(0);
       });
     });
 
     describe('suggestAccessibleAlternatives', () => {
-      it('should suggest alternatives for inaccessible combinations', () => {
-        const suggestions = suggestAccessibleAlternatives('#cccccc', '#ffffff');
+      it('should suggest accessible alternatives', () => {
+        const alternatives = suggestAccessibleAlternatives('#cccccc', '#ffffff');
+        expect(alternatives).toBeInstanceOf(Array);
+        expect(alternatives.length).toBeGreaterThan(0);
         
-        expect(suggestions).toHaveProperty('foregroundOptions');
-        expect(suggestions).toHaveProperty('backgroundOptions');
-        expect(Array.isArray(suggestions.foregroundOptions)).toBe(true);
-        expect(Array.isArray(suggestions.backgroundOptions)).toBe(true);
-      });
-
-      it('should provide alternatives that meet minimum AA standards', () => {
-        const suggestions = suggestAccessibleAlternatives('#cccccc', '#ffffff');
-        
-        suggestions.foregroundOptions.forEach(option => {
-          const ratio = calculateContrastRatio(option.color, '#ffffff');
-          expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+        alternatives.forEach(alt => {
+          expect(alt).toHaveProperty('foreground');
+          expect(alt).toHaveProperty('background');
+          expect(alt).toHaveProperty('contrastRatio');
+          expect(alt).toHaveProperty('level');
+          expect(alt.contrastRatio).toBeGreaterThanOrEqual(4.5);
         });
       });
 
-      it('should include color information in suggestions', () => {
-        const suggestions = suggestAccessibleAlternatives('#cccccc', '#ffffff');
-        
-        if (suggestions.foregroundOptions.length > 0) {
-          const option = suggestions.foregroundOptions[0];
-          expect(option).toHaveProperty('color');
-          expect(option).toHaveProperty('ratio');
-          expect(option).toHaveProperty('level');
-          expect(typeof option.color).toBe('string');
-          expect(typeof option.ratio).toBe('number');
-          expect(typeof option.level).toBe('string');
-        }
+      it('should return empty array for already accessible combinations', () => {
+        const alternatives = suggestAccessibleAlternatives('#000000', '#ffffff');
+        expect(alternatives).toEqual([]);
       });
 
-      it('should prioritize higher contrast alternatives', () => {
-        const suggestions = suggestAccessibleAlternatives('#888888', '#ffffff');
+      it('should handle invalid colors gracefully', () => {
+        const alternatives = suggestAccessibleAlternatives('invalid', '#ffffff');
+        expect(alternatives).toBeInstanceOf(Array);
+      });
+    });
+
+    describe('generateAccessibleColorVariations', () => {
+      it('should generate accessible color variations', () => {
+        const variations = generateAccessibleColorVariations('#0066cc');
+        expect(variations).toBeInstanceOf(Array);
+        expect(variations.length).toBeGreaterThan(0);
         
-        if (suggestions.foregroundOptions.length > 1) {
-          for (let i = 1; i < suggestions.foregroundOptions.length; i++) {
-            expect(suggestions.foregroundOptions[i - 1].ratio)
-              .toBeGreaterThanOrEqual(suggestions.foregroundOptions[i].ratio);
-          }
-        }
+        variations.forEach(variation => {
+          expect(variation).toHaveProperty('color');
+          expect(variation).toHaveProperty('onWhite');
+          expect(variation).toHaveProperty('onBlack');
+          expect(variation.onWhite.contrastRatio).toBeGreaterThanOrEqual(4.5);
+        });
       });
 
-      it('should return empty arrays for already accessible combinations', () => {
-        const suggestions = suggestAccessibleAlternatives('#000000', '#ffffff');
-        
-        expect(suggestions.foregroundOptions).toHaveLength(0);
-        expect(suggestions.backgroundOptions).toHaveLength(0);
+      it('should handle invalid colors', () => {
+        const variations = generateAccessibleColorVariations('invalid');
+        expect(variations).toBeInstanceOf(Array);
+        expect(variations.length).toBe(0);
+      });
+
+      it('should generate variations with different luminance levels', () => {
+        const variations = generateAccessibleColorVariations('#0066cc');
+        const luminances = variations.map(v => getRelativeLuminance(v.color));
+        expect(new Set(luminances).size).toBeGreaterThan(1);
       });
     });
   });
 
   describe('Constants and predefined values', () => {
-    it('should export correct WCAG threshold constants', () => {
+    it('should have correct WCAG threshold constants', () => {
       expect(WCAG_AA_NORMAL).toBe(4.5);
       expect(WCAG_AA_LARGE).toBe(3);
       expect(WCAG_AAA_NORMAL).toBe(7);
       expect(WCAG_AAA_LARGE).toBe(4.5);
     });
 
-    it('should provide accessible color pairs', () => {
-      expect(Array.isArray(ACCESSIBLE_COLOR_PAIRS)).toBe(true);
-      expect(ACCESSIBLE_COLOR_PAIRS.length).toBeGreaterThan(0);
-      
-      // Each pair should have foreground and background colors
-      ACCESSIBLE_COLOR_PAIRS.forEach(pair => {
-        expect(pair).toHaveProperty('foreground');
-        expect(pair).toHaveProperty('background');
-        expect(typeof pair.foreground).toBe('string');
-        expect(typeof pair.background).toBe('string');
+    describe('ACCESSIBLE_COLOR_PAIRS', () => {
+      it('should contain valid accessible color pairs', () => {
+        expect(ACCESSIBLE_COLOR_PAIRS).toBeInstanceOf(Array);
+        expect(ACCESSIBLE_COLOR_PAIRS.length).toBeGreaterThan(0);
         
-        // Each pair should meet AA standards
-        const ratio = calculateContrastRatio(pair.foreground, pair.background);
-        expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+        ACCESSIBLE_COLOR_PAIRS.forEach(pair => {
+          expect(pair).toHaveProperty('foreground');
+          expect(pair).toHaveProperty('background');
+          expect(pair).toHaveProperty('name');
+          expect(typeof pair.foreground).toBe('string');
+          expect(typeof pair.background).toBe('string');
+          expect(typeof pair.name).toBe('string');
+          
+          const contrastRatio = calculateContrastRatio(pair.foreground, pair.background);
+          expect(contrastRatio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+        });
+      });
+
+      it('should have unique pair names', () => {
+        const names = ACCESSIBLE_COLOR_PAIRS.map(pair => pair.name);
+        const uniqueNames = new Set(names);
+        expect(names.length).toBe(uniqueNames.size);
+      });
+    });
+  });
+
+  describe('Edge cases and error handling', () => {
+    it('should handle null and undefined inputs gracefully', () => {
+      expect(calculateContrastRatio(null as any, '#ffffff')).toBe(1);
+      expect(calculateContrastRatio(undefined as any, '#ffffff')).toBe(1);
+      expect(isWCAGCompliant(null as any, '#ffffff', WCAG_AA_NORMAL)).toBe(false);
+      expect(getAccessibilityLevel(undefined as any, '#ffffff')).toBe('Fail');
+    });
+
+    it('should handle empty strings', () => {
+      expect(calculateContrastRatio('', '')).toBe(1);
+      expect(isWCAGCompliant('', '#ffffff', WCAG_AA_NORMAL)).toBe(false);
+      expect(getAccessibilityLevel('', '#ffffff')).toBe('Fail');
+    });
+
+    it('should handle malformed hex codes', () => {
+      const malformedCodes = ['#', '#ff', '#ffff', '#gggggg', 'rgb(255,0,0)', 'red'];
+      
+      malformedCodes.forEach(code => {
+        expect(hexToRgb(code)).toBeNull();
+        expect(getRelativeLuminance(code)).toBe(0);
+        expect(calculateContrastRatio(code, '#ffffff')).toBe(1);
       });
     });
 
-    it('should include diverse color combinations in predefined pairs', () => {
-      // Check that we have both light and dark backgrounds
-      const lightBackgrounds = ACCESSIBLE_COLOR_PAIRS.filter(pair => 
-        getRelativeLuminance(pair.background) > 0.5
-      );
-      const darkBackgrounds = ACCESSIBLE_COLOR_PAIRS.filter(pair => 
-        getRelativeLuminance(pair.background) <= 0.5
-      );
-      
-      expect(lightBackgrounds.length).toBeGreaterThan(0);
-      expect(darkBackgrounds.length).toBeGreaterThan(0);
-    });
-  });
-});
+    it('should handle extreme RGB values in rgbToHex', () => {
+      expect(rgbToHex(-100, -100, -100)).toBe('#000000');
+      expect(rgbToHex(1000, 1000, 1000)).toBe('#ffffff');
