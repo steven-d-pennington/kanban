@@ -37,7 +37,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
             <Check className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Check Your Email</h1>
-          <p className="text-gray-600 mt-2 mb-6">
+          <p className="text-gray-700 mt-2 mb-6">
             We've sent a confirmation link to <strong>{email}</strong>. Click the link to verify your account.
           </p>
           <button
@@ -59,7 +59,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
             <UserPlus className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-600 mt-2">Start managing your projects with AI agents</p>
+          <p className="text-gray-700 mt-2">Start managing your projects with AI agents</p>
         </div>
 
         {error && (
@@ -71,7 +71,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-1">
               Email
             </label>
             <div className="relative">
@@ -81,7 +81,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                 placeholder="you@example.com"
                 required
               />
@@ -89,7 +89,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-gray-800 mb-1">
               Password
             </label>
             <div className="relative">
@@ -99,17 +99,17 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                 placeholder="••••••••"
                 required
                 minLength={6}
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters</p>
+            <p className="mt-1 text-xs text-gray-600">Must be at least 6 characters</p>
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-800 mb-1">
               Confirm Password
             </label>
             <div className="relative">
@@ -119,7 +119,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 ${
                   confirmPassword && password !== confirmPassword
                     ? 'border-red-300'
                     : 'border-gray-300'
@@ -143,7 +143,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-gray-700">
           Already have an account?{' '}
           <button
             onClick={onSwitchToLogin}
