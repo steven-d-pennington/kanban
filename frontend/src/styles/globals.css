@@ -1,0 +1,347 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Accessible color pairings - WCAG AA compliant */
+  --color-primary-50: #f0f9ff;
+  --color-primary-100: #e0f2fe;
+  --color-primary-200: #bae6fd;
+  --color-primary-300: #7dd3fc;
+  --color-primary-400: #38bdf8;
+  --color-primary-500: #0ea5e9;
+  --color-primary-600: #0284c7;
+  --color-primary-700: #0369a1;
+  --color-primary-800: #075985;
+  --color-primary-900: #0c4a6e;
+  --color-primary-950: #082f49;
+
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f4f4f5;
+  --color-neutral-200: #e4e4e7;
+  --color-neutral-300: #d4d4d8;
+  --color-neutral-400: #a1a1aa;
+  --color-neutral-500: #71717a;
+  --color-neutral-600: #52525b;
+  --color-neutral-700: #3f3f46;
+  --color-neutral-800: #27272a;
+  --color-neutral-900: #18181b;
+  --color-neutral-950: #09090b;
+
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-300: #86efac;
+  --color-success-400: #4ade80;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-success-800: #166534;
+  --color-success-900: #14532d;
+  --color-success-950: #052e16;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+  --color-warning-950: #451a03;
+
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+  --color-error-950: #450a0a;
+
+  /* Focus ring styles */
+  --focus-ring: 2px solid var(--color-primary-500);
+  --focus-ring-offset: 2px;
+  --focus-ring-inset: inset 0 0 0 2px var(--color-primary-500);
+
+  /* High contrast mode support */
+  --border-contrast: var(--color-neutral-300);
+  --text-contrast: var(--color-neutral-900);
+  --bg-contrast: var(--color-neutral-50);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --border-contrast: var(--color-neutral-700);
+    --text-contrast: var(--color-neutral-100);
+    --bg-contrast: var(--color-neutral-900);
+  }
+}
+
+/* High contrast mode detection */
+@media (prefers-contrast: high) {
+  :root {
+    --border-contrast: #000000;
+    --text-contrast: #000000;
+    --bg-contrast: #ffffff;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --border-contrast: #ffffff;
+      --text-contrast: #ffffff;
+      --bg-contrast: #000000;
+    }
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Base layer overrides */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    @apply antialiased;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'pnum' 1, 'tnum' 0, 'onum' 1, 'lnum' 0, 'dlig' 0;
+  }
+
+  /* Focus styles */
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Skip links */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--color-primary-600);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 0 0 4px 4px;
+    z-index: 1000;
+    font-weight: 600;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  /* Screen reader only content */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+}
+
+/* Component layer utilities */
+@layer components {
+  /* Accessible button variants */
+  .btn-primary {
+    @apply bg-blue-600 text-white border-2 border-blue-600 px-4 py-2 rounded font-medium transition-colors duration-200;
+    @apply hover:bg-blue-700 hover:border-blue-700;
+    @apply focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+    @apply active:bg-blue-800;
+    @apply disabled:bg-neutral-300 disabled:text-neutral-500 disabled:border-neutral-300 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-blue-600 border-2 border-blue-600 px-4 py-2 rounded font-medium transition-colors duration-200;
+    @apply hover:bg-blue-50;
+    @apply focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+    @apply active:bg-blue-100;
+    @apply disabled:bg-neutral-100 disabled:text-neutral-400 disabled:border-neutral-300 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 text-white border-2 border-red-600 px-4 py-2 rounded font-medium transition-colors duration-200;
+    @apply hover:bg-red-700 hover:border-red-700;
+    @apply focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2;
+    @apply active:bg-red-800;
+    @apply disabled:bg-neutral-300 disabled:text-neutral-500 disabled:border-neutral-300 disabled:cursor-not-allowed;
+  }
+
+  /* Form elements */
+  .form-input {
+    @apply block w-full px-3 py-2 border border-neutral-300 rounded-md shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed;
+    @apply invalid:border-red-500 invalid:ring-red-500;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-neutral-700 mb-1;
+  }
+
+  .form-error {
+    @apply text-sm text-red-600 mt-1;
+  }
+
+  .form-helper {
+    @apply text-sm text-neutral-600 mt-1;
+  }
+
+  /* Card components */
+  .card {
+    @apply bg-white border border-neutral-200 rounded-lg shadow-sm p-6;
+  }
+
+  .card-header {
+    @apply border-b border-neutral-200 pb-3 mb-4;
+  }
+
+  .card-title {
+    @apply text-lg font-semibold text-neutral-900;
+  }
+
+  /* Alert components */
+  .alert {
+    @apply px-4 py-3 rounded-md border;
+  }
+
+  .alert-info {
+    @apply bg-blue-50 border-blue-200 text-blue-800;
+  }
+
+  .alert-success {
+    @apply bg-green-50 border-green-200 text-green-800;
+  }
+
+  .alert-warning {
+    @apply bg-yellow-50 border-yellow-200 text-yellow-800;
+  }
+
+  .alert-error {
+    @apply bg-red-50 border-red-200 text-red-800;
+  }
+}
+
+/* Utility layer for accessibility */
+@layer utilities {
+  /* High contrast utilities */
+  .text-contrast {
+    color: var(--text-contrast);
+  }
+
+  .bg-contrast {
+    background-color: var(--bg-contrast);
+  }
+
+  .border-contrast {
+    border-color: var(--border-contrast);
+  }
+
+  /* Focus utilities */
+  .focus-ring {
+    @apply focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2;
+  }
+
+  .focus-ring-inset {
+    @apply focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500;
+  }
+
+  /* Text size utilities for better readability */
+  .text-readable {
+    @apply text-base leading-relaxed;
+  }
+
+  .text-readable-lg {
+    @apply text-lg leading-relaxed;
+  }
+
+  /* Spacing utilities for touch targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Color contrast utilities */
+  .contrast-aa {
+    color: #333333;
+    background-color: #ffffff;
+  }
+
+  .contrast-aaa {
+    color: #000000;
+    background-color: #ffffff;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  a[href]:after {
+    content: ' (' attr(href) ')';
+  }
+
+  abbr[title]:after {
+    content: ' (' attr(title) ')';
+  }
+}
