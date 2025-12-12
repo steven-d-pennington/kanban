@@ -70,6 +70,7 @@ ${input.codebaseContext.relevantFiles.map(f => `- ${f.path}: ${f.description || 
 
 Create a detailed, step-by-step implementation plan.`;
 
+    console.log(`[Planner] 🤔 Thinking... Generating plan for "${input.item.title}"`);
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
@@ -88,7 +89,16 @@ Create a detailed, step-by-step implementation plan.`;
 
     // Parse JSON response
     try {
-      const plan = JSON.parse(textContent.text) as ImplementationPlan;
+      // Clean up potential markdown formatting
+      let jsonString = textContent.text.trim();
+      if (jsonString.startsWith('```json')) {
+        jsonString = jsonString.replace(/^```json/, '').replace(/```$/, '');
+      } else if (jsonString.startsWith('```')) {
+        jsonString = jsonString.replace(/^```/, '').replace(/```$/, '');
+      }
+
+      const plan = JSON.parse(jsonString) as ImplementationPlan;
+      console.log(`[Planner] 💡 Plan generated: ${plan.summary.substring(0, 100)}...`);
       return plan;
     } catch (error) {
       throw new Error(`Failed to parse implementation plan: ${error}`);

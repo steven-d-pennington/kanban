@@ -5,6 +5,7 @@
  * Note: Requires GITHUB_TOKEN environment variable.
  */
 
+import { Buffer } from 'buffer';
 import type { PRInput, PRResult } from './types';
 
 /**
@@ -29,6 +30,148 @@ export class PRCreator {
   }
 
   /**
+   * Verify access to the repository.
+   */
+  async verifyAccess(): Promise<{ success: boolean; message: string }> {
+    if (!this.isConfigured()) {
+      return { success: false, message: 'GitHub configuration missing (token, owner, or repo)' };
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${this.owner}/${this.repo}`,
+        {
+          headers: {
+            Authorization: `token ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) return { success: false, message: 'Invalid GitHub token' };
+        if (response.status === 404) return { success: false, message: 'Repository not found or access denied' };
+        return { success: false, message: `GitHub API error: ${response.status} ${response.statusText}` };
+      }
+
+      const data = await response.json() as { permissions?: { push: boolean } };
+      if (data.permissions && !data.permissions.push) {
+        return { success: false, message: 'Token lacks push permissions for this repository' };
+      }
+
+      return { success: true, message: `Connected to ${this.owner}/${this.repo}` };
+    } catch (error) {
+      return { success: false, message: `Connection failed: ${error}` };
+    }
+  }
+
+  /**
+   * Ensure a branch exists for the work item.
+   */
+  async ensureBranch(item: { type: string; title: string; id: string }): Promise<string> {
+    if (!this.isConfigured()) {
+      return `mocks/branch-for-${item.id.slice(0, 8)}`;
+    }
+
+    const branchName = this.generateBranchName(item);
+
+    try {
+      // Check if branch exists
+      try {
+        await this.getRef(branchName);
+        return branchName; // Branch already exists
+      } catch {
+        // Branch doesn't exist, create it from main
+        const baseBranch = 'main';
+        const baseRef = await this.getRef(baseBranch);
+        await this.createBranch(branchName, baseRef);
+        return branchName;
+      }
+    } catch (error) {
+      console.error('Failed to ensure branch:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get file content from GitHub.
+   */
+  async getFileContent(path: string, branch: string = 'main'): Promise<string | null> {
+    if (!this.isConfigured()) return null;
+
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/${this.owner}/${this.repo}/contents/${path}?ref=${branch}`,
+        {
+          headers: {
+            Authorization: `token ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      if (response.status === 404) return null;
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json() as { content: string; encoding: string };
+      if (data.encoding === 'base64') {
+        return Buffer.from(data.content, 'base64').toString('utf-8');
+      }
+      return data.content;
+    } catch (error) {
+      console.error(`Failed to read file ${path}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get directory structure from GitHub.
+   * Returns a recursive file tree.
+   */
+  async getDirectoryStructure(path: string = '', branch: string = 'main'): Promise<any[]> {
+    if (!this.isConfigured()) return [];
+
+    try {
+      // Use the recursive tree API for efficiency
+      // First get the SHA of the branch head
+      const refResponse = await fetch(
+        `https://api.github.com/repos/${this.owner}/${this.repo}/git/refs/heads/${branch}`,
+        {
+          headers: {
+            Authorization: `token ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      if (!refResponse.ok) return [];
+      const refData = await refResponse.json() as { object: { sha: string } };
+      const commitSha = refData.object.sha;
+
+      // Get the tree recursively
+      const treeResponse = await fetch(
+        `https://api.github.com/repos/${this.owner}/${this.repo}/git/trees/${commitSha}?recursive=1`,
+        {
+          headers: {
+            Authorization: `token ${this.token}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      if (!treeResponse.ok) return [];
+      const treeData = await treeResponse.json() as { tree: any[] };
+
+      return treeData.tree;
+    } catch (error) {
+      console.error('Failed to fetch directory structure:', error);
+      return [];
+    }
+  }
+
+  /**
    * Create a pull request with the given changes.
    */
   async create(input: PRInput): Promise<PRResult> {
@@ -40,12 +183,10 @@ export class PRCreator {
     const branchName = this.generateBranchName(input.item);
 
     try {
-      // Get base branch SHA
-      const baseBranch = 'main';
-      const baseRef = await this.getRef(baseBranch);
+      // Ensure branch exists (using ensureBranch to handle existence)
+      await this.ensureBranch(input.item);
 
-      // Create new branch
-      await this.createBranch(branchName, baseRef);
+      const baseBranch = 'main';
 
       // Commit changes
       for (const change of input.changes.files) {
@@ -78,7 +219,7 @@ export class PRCreator {
   /**
    * Generate branch name from work item.
    */
-  private generateBranchName(item: { type: string; title: string; id: string }): string {
+  generateBranchName(item: { type: string; title: string; id: string }): string {
     const sanitizedTitle = item.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')

@@ -61,18 +61,18 @@ export const WorkItemCard = memo(function WorkItemCard({ item }: WorkItemCardPro
       <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{item.title}</h3>
 
       {/* Description preview */}
-      <p className="text-sm text-gray-500 mb-3 line-clamp-2">{item.description}</p>
+      <p className="text-sm text-gray-700 mb-3 line-clamp-2">{item.description}</p>
 
       {/* Labels */}
       {item.labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {item.labels.slice(0, 3).map((label) => (
-            <span key={label} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+            <span key={label} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">
               {label}
             </span>
           ))}
           {item.labels.length > 3 && (
-            <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+            <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">
               +{item.labels.length - 3}
             </span>
           )}
@@ -92,7 +92,7 @@ export const WorkItemCard = memo(function WorkItemCard({ item }: WorkItemCardPro
 
         <div className="flex items-center gap-2">
           {/* Comments indicator */}
-          <div className="flex items-center gap-1 text-gray-400">
+          <div className="flex items-center gap-1 text-gray-700">
             <MessageSquare className="w-3.5 h-3.5" />
             <span className="text-xs">3</span>
           </div>
@@ -100,9 +100,8 @@ export const WorkItemCard = memo(function WorkItemCard({ item }: WorkItemCardPro
           {/* Assignee */}
           {item.assignedAgent ? (
             <div
-              className={`flex items-center gap-1 px-2 py-1 rounded ${
-                AGENT_CONFIG[item.assignedAgent].bgColor
-              }`}
+              className={`flex items-center gap-1 px-2 py-1 rounded ${AGENT_CONFIG[item.assignedAgent].bgColor
+                }`}
               title={AGENT_CONFIG[item.assignedAgent].label}
             >
               <Bot className={`w-3.5 h-3.5 ${AGENT_CONFIG[item.assignedAgent].color}`} />
@@ -125,7 +124,7 @@ export const WorkItemCard = memo(function WorkItemCard({ item }: WorkItemCardPro
         <div className="mt-3 pt-2 border-t border-gray-100">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-700">
               Processing by {AGENT_CONFIG[item.assignedAgent].label}...
             </span>
           </div>

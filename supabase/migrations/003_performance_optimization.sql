@@ -7,35 +7,32 @@
 -- =============================================================================
 
 -- Composite index for common project + status queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_work_items_project_status
+CREATE INDEX IF NOT EXISTS idx_work_items_project_status
   ON work_items(project_id, status);
 
 -- Index for agent assignment queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_work_items_assigned_status
+CREATE INDEX IF NOT EXISTS idx_work_items_assigned_status
   ON work_items(assigned_agent, status)
   WHERE assigned_agent IS NOT NULL;
 
 -- Index for ordering and pagination
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_work_items_updated
+CREATE INDEX IF NOT EXISTS idx_work_items_updated
   ON work_items(updated_at DESC);
 
 -- Index for completed items (for analytics)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_work_items_completed
+CREATE INDEX IF NOT EXISTS idx_work_items_completed
   ON work_items(completed_at DESC)
   WHERE completed_at IS NOT NULL;
 
--- Partial index for recent agent activity
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_agent_activity_recent
-  ON agent_activity(created_at DESC)
-  WHERE created_at > NOW() - INTERVAL '7 days';
+
 
 -- Partial index for active work items (not done/archived)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_work_items_active
+CREATE INDEX IF NOT EXISTS idx_work_items_active
   ON work_items(project_id, column_order)
   WHERE status NOT IN ('done');
 
 -- Index for cycle time queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_work_items_cycle_time
+CREATE INDEX IF NOT EXISTS idx_work_items_cycle_time
   ON work_items(project_id, started_at, completed_at)
   WHERE started_at IS NOT NULL AND completed_at IS NOT NULL;
 

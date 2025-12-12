@@ -57,6 +57,7 @@ ${input.metadata ? `Additional metadata:\n${JSON.stringify(input.metadata, null,
 
 Generate a comprehensive PRD that covers all aspects of this feature.`;
 
+  console.log(`[ProjectManager] 🤔 Thinking... Generating PRD for "${input.title}"`);
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 4096,
@@ -75,7 +76,16 @@ Generate a comprehensive PRD that covers all aspects of this feature.`;
 
   // Parse JSON response
   try {
-    const prd = JSON.parse(textContent.text) as PRDOutput;
+    // Clean up potential markdown formatting
+    let jsonString = textContent.text.trim();
+    if (jsonString.startsWith('```json')) {
+      jsonString = jsonString.replace(/^```json/, '').replace(/```$/, '');
+    } else if (jsonString.startsWith('```')) {
+      jsonString = jsonString.replace(/^```/, '').replace(/```$/, '');
+    }
+
+    const prd = JSON.parse(jsonString) as PRDOutput;
+    console.log(`[ProjectManager] 💡 Generated PRD with ${prd.requirements.functional.length} requirements`);
     return prd;
   } catch (error) {
     throw new Error(`Failed to parse PRD response: ${error}`);

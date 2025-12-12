@@ -8,6 +8,7 @@
 export interface AnalyzeOptions {
   projectId: string;
   relevantPaths?: string[];
+  branch?: string;
 }
 
 /**

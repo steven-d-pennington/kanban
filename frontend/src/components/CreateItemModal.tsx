@@ -27,7 +27,7 @@ export function CreateItemModal() {
         dueDate: data.dueDate,
         labels: data.labels,
         metadata: {},
-        createdBy: 'user-1', // TODO: Get from auth
+
       });
       setCreateModalOpen(false);
       toast.success('Work item created successfully');

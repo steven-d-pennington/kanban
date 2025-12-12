@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKanbanStore } from '../store/kanbanStore';
 import { ITEM_TYPE_CONFIG, PRIORITY_CONFIG, AGENT_CONFIG, COLUMNS } from '../types';
 import type { Status } from '../types';
@@ -18,15 +18,31 @@ import {
 import { WorkItemForm, type WorkItemFormData } from './forms/WorkItemForm';
 import { DeleteConfirmDialog } from './DeleteConfirmDialog';
 import { toast } from './Toast';
+import { ActivityFeed } from './ActivityFeed';
 
 export function WorkItemDetail() {
-  const { selectedWorkItem, setSelectedWorkItem, moveWorkItem, updateWorkItem, deleteWorkItem } =
-    useKanbanStore();
+  const {
+    selectedWorkItem,
+    setSelectedWorkItem,
+    moveWorkItem,
+    updateWorkItem,
+    deleteWorkItem,
+    comments,
+    fetchComments,
+    addComment
+  } = useKanbanStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [commentText, setCommentText] = useState('');
+
+  useEffect(() => {
+    if (selectedWorkItem) {
+      fetchComments(selectedWorkItem.id);
+    }
+  }, [selectedWorkItem, fetchComments]);
 
   if (!selectedWorkItem) return null;
 
@@ -78,37 +94,16 @@ export function WorkItemDetail() {
     }
   };
 
-  const mockComments = [
-    {
-      id: '1',
-      author: 'PM Agent',
-      isAgent: true,
-      content: 'Claimed this item for PRD generation. Analyzing requirements...',
-      timestamp: '2 hours ago',
-    },
-    {
-      id: '2',
-      author: 'John Doe',
-      isAgent: false,
-      content: 'Please prioritize the OAuth integration with Google as the primary provider.',
-      timestamp: '1 hour ago',
-    },
-    {
-      id: '3',
-      author: 'PM Agent',
-      isAgent: true,
-      content:
-        'PRD generation complete. Created comprehensive requirements document with acceptance criteria.',
-      timestamp: '30 min ago',
-    },
-  ];
-
-  const mockActivityLog = [
-    { action: 'Created', actor: 'John Doe', timestamp: '3 days ago' },
-    { action: 'Moved to Ready', actor: 'John Doe', timestamp: '2 days ago' },
-    { action: 'Claimed by PM Agent', actor: 'pm-agent-001', timestamp: '2 hours ago' },
-    { action: 'Processing started', actor: 'pm-agent-001', timestamp: '2 hours ago' },
-  ];
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+    try {
+      await addComment(selectedWorkItem.id, commentText);
+      setCommentText('');
+      toast.success('Comment added');
+    } catch {
+      toast.error('Failed to add comment');
+    }
+  };
 
   // Edit Mode View
   if (isEditing) {
@@ -199,7 +194,7 @@ export function WorkItemDetail() {
               {/* Status and Assignment */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                   <select
                     value={selectedWorkItem.status}
                     onChange={(e) => {
@@ -217,7 +212,7 @@ export function WorkItemDetail() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Assigned To
                   </label>
                   <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg bg-gray-50">
@@ -236,7 +231,7 @@ export function WorkItemDetail() {
                         <span className="font-medium">Human User</span>
                       </>
                     ) : (
-                      <span className="text-gray-400">Unassigned</span>
+                      <span className="text-gray-500">Unassigned</span>
                     )}
                   </div>
                 </div>
@@ -244,8 +239,8 @@ export function WorkItemDetail() {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">Description</label>
-                <div className="prose prose-sm max-w-none p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <div className="prose prose-sm max-w-none p-4 bg-gray-50 rounded-lg border border-gray-200 text-gray-900">
                   <p className="whitespace-pre-wrap">
                     {selectedWorkItem.description || 'No description provided.'}
                   </p>
@@ -255,12 +250,12 @@ export function WorkItemDetail() {
               {/* Labels */}
               {selectedWorkItem.labels.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">Labels</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Labels</label>
                   <div className="flex flex-wrap gap-2">
                     {selectedWorkItem.labels.map((label) => (
                       <span
                         key={label}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                        className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
                       >
                         {label}
                       </span>
@@ -272,9 +267,9 @@ export function WorkItemDetail() {
               {/* Due Date */}
               {selectedWorkItem.dueDate && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">Due Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
                   <div className="flex items-center gap-2 text-gray-700">
-                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <Calendar className="w-4 h-4 text-gray-500" />
                     <span>{formatDate(selectedWorkItem.dueDate)}</span>
                   </div>
                 </div>
@@ -283,12 +278,12 @@ export function WorkItemDetail() {
               {/* Metadata */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <Calendar className="w-4 h-4 text-gray-500" />
                   <span>Created: {formatDate(selectedWorkItem.createdAt)}</span>
                 </div>
                 {selectedWorkItem.startedAt && (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4 text-gray-400" />
+                    <Clock className="w-4 h-4 text-gray-500" />
                     <span>Started: {formatDate(selectedWorkItem.startedAt)}</span>
                   </div>
                 )}
@@ -326,26 +321,43 @@ export function WorkItemDetail() {
                   </div>
                 </div>
               )}
+              {/* Artifacts Section */}
+              {!!selectedWorkItem.metadata?.implementation_plan && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">Implementation Plan</h3>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 font-mono text-sm overflow-x-auto whitespace-pre-wrap text-gray-900">
+                    {JSON.stringify(selectedWorkItem.metadata.implementation_plan, null, 2)}
+                  </div>
+                </div>
+              )}
+
+              {!!selectedWorkItem.metadata?.prd && (
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">PRD / Requirements</h3>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 font-mono text-sm overflow-x-auto whitespace-pre-wrap text-gray-900">
+                    {JSON.stringify(selectedWorkItem.metadata.prd, null, 2)}
+                  </div>
+                </div>
+              )}
 
               {/* Comments Section */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <MessageSquare className="w-4 h-4 text-gray-400" />
+                  <MessageSquare className="w-4 h-4 text-gray-500" />
                   <h3 className="font-medium text-gray-900">Comments</h3>
-                  <span className="text-sm text-gray-500">({mockComments.length})</span>
+                  <span className="text-sm text-gray-600">({comments.length})</span>
                 </div>
 
                 <div className="space-y-4">
-                  {mockComments.map((comment) => (
+                  {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          comment.isAgent
-                            ? 'bg-gradient-to-br from-violet-500 to-indigo-500'
-                            : 'bg-gradient-to-br from-green-400 to-emerald-500'
-                        }`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${comment.authorAgent
+                          ? 'bg-gradient-to-br from-violet-500 to-indigo-500'
+                          : 'bg-gradient-to-br from-green-400 to-emerald-500'
+                          }`}
                       >
-                        {comment.isAgent ? (
+                        {comment.authorAgent ? (
                           <Bot className="w-4 h-4 text-white" />
                         ) : (
                           <User className="w-4 h-4 text-white" />
@@ -353,15 +365,17 @@ export function WorkItemDetail() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-gray-900">{comment.author}</span>
-                          {comment.isAgent && (
+                          <span className="font-medium text-gray-900">
+                            {comment.authorAgent ? AGENT_CONFIG[comment.authorAgent].label : 'User'}
+                          </span>
+                          {comment.authorAgent && (
                             <span className="text-xs px-2 py-0.5 bg-violet-100 text-violet-700 rounded">
                               Agent
                             </span>
                           )}
-                          <span className="text-sm text-gray-400">{comment.timestamp}</span>
+                          <span className="text-sm text-gray-500">{formatDate(comment.createdAt)}</span>
                         </div>
-                        <p className="text-gray-700">{comment.content}</p>
+                        <p className="text-gray-800 whitespace-pre-wrap">{comment.content}</p>
                       </div>
                     </div>
                   ))}
@@ -376,10 +390,15 @@ export function WorkItemDetail() {
                     <textarea
                       placeholder="Add a comment..."
                       rows={2}
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
                       className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                     />
                     <div className="mt-2 flex justify-end">
-                      <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                      <button
+                        onClick={handleAddComment}
+                        disabled={!commentText.trim()}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm rounded-lg transition-colors">
                         Comment
                       </button>
                     </div>
@@ -390,19 +409,12 @@ export function WorkItemDetail() {
               {/* Activity Log */}
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <Activity className="w-4 h-4 text-gray-400" />
+                  <Activity className="w-4 h-4 text-gray-500" />
                   <h3 className="font-medium text-gray-900">Activity Log</h3>
                 </div>
 
                 <div className="space-y-3">
-                  {mockActivityLog.map((activity, index) => (
-                    <div key={index} className="flex items-center gap-3 text-sm">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full" />
-                      <span className="text-gray-900">{activity.action}</span>
-                      <span className="text-gray-500">by {activity.actor}</span>
-                      <span className="text-gray-400">{activity.timestamp}</span>
-                    </div>
-                  ))}
+                  <ActivityFeed workItemId={selectedWorkItem.id} compact />
                 </div>
               </div>
             </div>

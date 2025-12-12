@@ -5,6 +5,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import type { PRCreator } from './prCreator';
 import type {
   GenerateInput,
   CodeChanges,
@@ -14,10 +15,33 @@ import type {
   CodebaseContext,
 } from './types';
 
+// Simple glob matching support since we don't have minimatch
+function matchPattern(path: string, pattern: string): boolean {
+  // Normalize paths
+  path = path.replace(/^\/+/, '');
+  pattern = pattern.replace(/^\/+/, '');
+
+  if (pattern === path) return true;
+
+  const regexPattern = pattern
+    .replace(/\./g, '\\.')
+    .replace(/\*\*\//g, '(.+/)?')
+    .replace(/\*\*/g, '.+')
+    .replace(/\*/g, '[^/]+');
+
+  return new RegExp(`^${regexPattern}$`).test(path);
+}
+
 /**
  * Generates code changes based on implementation plans.
  */
 export class CodeGenerator {
+  private prCreator: PRCreator;
+
+  constructor(prCreator: PRCreator) {
+    this.prCreator = prCreator;
+  }
+
   /**
    * Generate all code changes for the implementation plan.
    */
@@ -28,34 +52,61 @@ export class CodeGenerator {
     for (const step of input.plan.steps) {
       if (step.action === 'delete') {
         for (const filePath of step.files) {
+          console.log(`[CodeGenerator] Deleting file: ${filePath}`);
           changes.push({ path: filePath, action: 'delete' });
         }
         continue;
       }
 
+
       // Generate content for each file in the step
-      for (const filePath of step.files) {
-        const existingContent = step.action === 'modify'
-          ? await this.readFile(input.codebaseContext, filePath)
-          : null;
+      for (const rawPath of step.files) {
+        const expandedPaths = await this.expandPath(rawPath);
 
-        const newContent = await this.generateFileContent({
-          filePath,
-          existingContent,
-          step,
-          context: input.codebaseContext,
-        });
+        for (const filePath of expandedPaths) {
+          if (step.action === 'modify') {
+            console.log(`[CodeGenerator] Reading file: ${filePath}`);
+          }
 
-        changes.push({
-          path: filePath,
-          action: step.action,
-          content: newContent,
-        });
+          const existingContent = step.action === 'modify'
+            ? await this.readFile(filePath)
+            : null;
+
+          if (step.action === 'modify' && existingContent === null) {
+            console.log(`[CodeGenerator] ℹ️ File '${filePath}' not found for modification. Creating it instead.`);
+            // We continue, passing null existingContent to generateFileContent, effectively creating it.
+          }
+
+          if (step.action === 'create') {
+            const exists = await this.prCreator.getFileContent(filePath);
+            if (exists) {
+              console.log(`[CodeGenerator] Note: File ${filePath} already exists, treating as modify`);
+            } else {
+              console.log(`[CodeGenerator] Generating new file: ${filePath}`);
+            }
+          } else {
+            console.log(`[CodeGenerator] Generating modifications for: ${filePath}`);
+          }
+
+          const newContent = await this.generateFileContent({
+            filePath,
+            existingContent,
+            step,
+            context: input.codebaseContext,
+          });
+
+          changes.push({
+            path: filePath,
+            action: step.action,
+            content: newContent,
+          });
+        }
       }
     }
 
     // Generate test files
     for (const test of input.plan.tests) {
+      console.log(`[CodeGenerator] Generating test file: ${test.file}`);
       const testContent = await this.generateTestContent(
         test.file,
         test.scenarios,
@@ -77,12 +128,63 @@ export class CodeGenerator {
   }
 
   /**
-   * Read existing file content.
-   * In production, this would read from the actual filesystem.
+   * Read existing file content using GitHub API.
+   * Includes case-insensitive recovery logic.
    */
-  private async readFile(context: CodebaseContext, filePath: string): Promise<string | null> {
-    // Placeholder - in production, read from filesystem
+  private async readFile(filePath: string): Promise<string | null> {
+    // Try exact match first
+    let content = await this.prCreator.getFileContent(filePath);
+
+    if (content) return content;
+
+    // If failed, try case-insensitive lookup
+    console.log(`[CodeGenerator] Exact match failed for ${filePath}, trying case-insensitive search...`);
+    try {
+      const structure = await this.prCreator.getDirectoryStructure();
+      const normalizedTarget = filePath.toLowerCase();
+
+      const match = structure.find(item =>
+        item.type === 'blob' && item.path.toLowerCase() === normalizedTarget
+      );
+
+      if (match) {
+        console.log(`[CodeGenerator] Found case-insensitive match: ${match.path}`);
+        return await this.prCreator.getFileContent(match.path);
+      }
+    } catch (err) {
+      console.warn('[CodeGenerator] Directory scan failed during recovery:', err);
+    }
+
+    console.warn(`[CodeGenerator] Warning: Could not read file ${filePath}`);
     return null;
+  }
+
+  /**
+   * Expand glob patterns to real file paths.
+   */
+  private async expandPath(pattern: string): Promise<string[]> {
+    // If no wildcards, return as is
+    if (!pattern.includes('*')) {
+      return [pattern];
+    }
+
+    // Fetch directory structure to find matches
+    try {
+      const rawStructure = await this.prCreator.getDirectoryStructure();
+      const matches = rawStructure
+        .filter(item => item.type === 'blob' && matchPattern(item.path, pattern))
+        .map(item => item.path);
+
+      if (matches.length === 0) {
+        console.warn(`[CodeGenerator] No files matched pattern: ${pattern}`);
+        return [];
+      }
+
+      return matches;
+    } catch (error) {
+      console.error(`[CodeGenerator] Failed to expand glob ${pattern}:`, error);
+      return [pattern]; // Return original if failure
+    }
   }
 
   /**
@@ -125,6 +227,7 @@ ${input.step.details}
 
 Generate the complete file content.`;
 
+    console.log(`[CodeGenerator] 🤔 Thinking... Generating code for ${input.filePath}`);
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 8192,
@@ -140,7 +243,16 @@ Generate the complete file content.`;
       throw new Error('No text response from AI');
     }
 
-    return textContent.text;
+    let content = textContent.text.trim();
+    if (content.startsWith('```')) {
+      // Remove first line (```language)
+      content = content.split('\n').slice(1).join('\n');
+      // Remove last line (```)
+      if (content.endsWith('```')) {
+        content = content.replace(/```$/, '');
+      }
+    }
+    return content.trim();
   }
 
   /**
@@ -179,6 +291,7 @@ ${relatedFilesInfo}
 
 Generate comprehensive test coverage for these scenarios.`;
 
+    console.log(`[CodeGenerator] 🤔 Thinking... Generating tests for ${testFile}`);
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
@@ -194,7 +307,16 @@ Generate comprehensive test coverage for these scenarios.`;
       throw new Error('No text response from AI');
     }
 
-    return textContent.text;
+    let content = textContent.text.trim();
+    if (content.startsWith('```')) {
+      // Remove first line (```language)
+      content = content.split('\n').slice(1).join('\n');
+      // Remove last line (```)
+      if (content.endsWith('```')) {
+        content = content.replace(/```$/, '');
+      }
+    }
+    return content.trim();
   }
 
   /**

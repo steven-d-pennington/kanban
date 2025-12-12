@@ -65,6 +65,7 @@ ${input.projectContext.techStack ? `- Tech Stack: ${input.projectContext.techSta
 
 Generate comprehensive user stories that cover all requirements. Order them by priority and consider dependencies.`;
 
+  console.log(`[ScrumMaster] 🤔 Thinking... Generating stories from PRD`);
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 8192,
@@ -83,7 +84,16 @@ Generate comprehensive user stories that cover all requirements. Order them by p
 
   // Parse JSON response
   try {
-    const stories = JSON.parse(textContent.text) as StoryOutput[];
+    // Clean up potential markdown formatting
+    let jsonString = textContent.text.trim();
+    if (jsonString.startsWith('```json')) {
+      jsonString = jsonString.replace(/^```json/, '').replace(/```$/, '');
+    } else if (jsonString.startsWith('```')) {
+      jsonString = jsonString.replace(/^```/, '').replace(/```$/, '');
+    }
+
+    const stories = JSON.parse(jsonString) as StoryOutput[];
+    console.log(`[ScrumMaster] 💡 Generated ${stories.length} stories`);
     return stories;
   } catch (error) {
     throw new Error(`Failed to parse stories response: ${error}`);

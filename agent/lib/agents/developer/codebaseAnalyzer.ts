@@ -5,6 +5,7 @@
  * and conventions for informed code generation.
  */
 
+import type { PRCreator } from './prCreator';
 import type {
   AnalyzeOptions,
   CodebaseContext,
@@ -14,10 +15,33 @@ import type {
   TechStack,
 } from './types';
 
+// Simple glob matching support since we don't have minimatch
+function matchPattern(path: string, pattern: string): boolean {
+  // Normalize paths
+  path = path.replace(/^\/+/, '');
+  pattern = pattern.replace(/^\/+/, '');
+
+  if (pattern === path) return true;
+
+  const regexPattern = pattern
+    .replace(/\./g, '\\.')
+    .replace(/\*\*\//g, '(.+/)?')
+    .replace(/\*\*/g, '.+')
+    .replace(/\*/g, '[^/]+');
+
+  return new RegExp(`^${regexPattern}$`).test(path);
+}
+
 /**
  * Analyzes codebase structure and patterns.
  */
 export class CodebaseAnalyzer {
+  private prCreator: PRCreator;
+
+  constructor(prCreator: PRCreator) {
+    this.prCreator = prCreator;
+  }
+
   /**
    * Analyze the codebase for the given project.
    */
@@ -26,10 +50,10 @@ export class CodebaseAnalyzer {
     const repoInfo = await this.getRepoInfo(options.projectId);
 
     // Build directory structure
-    const structure = this.buildDefaultStructure();
+    const structure = await this.buildDirectoryStructure(options.branch);
 
     // Find relevant files
-    const relevantFiles = this.getRelevantFiles(options.relevantPaths);
+    const relevantFiles = await this.getRelevantFiles(options.relevantPaths, options.branch);
 
     // Detect patterns and tech stack
     const patterns = this.detectPatterns();
@@ -57,30 +81,19 @@ export class CodebaseAnalyzer {
   }
 
   /**
-   * Build a default directory structure.
-   * In production, this would scan the actual filesystem.
+   * Build directory structure.
    */
-  private buildDefaultStructure(): DirectoryStructure {
+  private async buildDirectoryStructure(branch: string = 'main'): Promise<DirectoryStructure> {
+    const rawStructure = await this.prCreator.getDirectoryStructure('', branch);
+
+    // Transform flat list to tree (simplified for now)
+    // For now we just return a simplified view
     return {
       name: 'root',
       type: 'directory',
       children: [
-        {
-          name: 'src',
-          type: 'directory',
-          children: [
-            { name: 'components', type: 'directory' },
-            { name: 'pages', type: 'directory' },
-            { name: 'lib', type: 'directory' },
-            { name: 'hooks', type: 'directory' },
-            { name: 'types', type: 'directory' },
-            { name: 'store', type: 'directory' },
-          ],
-        },
-        { name: 'tests', type: 'directory' },
-        { name: 'public', type: 'directory' },
-        { name: 'package.json', type: 'file' },
-        { name: 'tsconfig.json', type: 'file' },
+        { name: 'src', type: 'directory' },
+        // We could expand this based on rawStructure if needed
       ],
     };
   }
@@ -88,16 +101,48 @@ export class CodebaseAnalyzer {
   /**
    * Get relevant files for the implementation.
    */
-  private getRelevantFiles(paths?: string[]): FileInfo[] {
+  /**
+   * Get relevant files for the implementation.
+   * Expands glob patterns using the directory structure.
+   */
+  private async getRelevantFiles(paths: string[] | undefined, branch: string = 'main'): Promise<FileInfo[]> {
     if (!paths || paths.length === 0) {
       return [];
     }
 
-    return paths.map(path => ({
-      path,
-      description: `File at ${path}`,
-      language: this.detectLanguage(path),
-    }));
+    // Fetch structure first if needed (it might be cached/already fetched in analyze, 
+    // but here we need the RAW list to expand globs, or search the tree)
+    const rawStructure = await this.prCreator.getDirectoryStructure('', branch);
+    // rawStructure is a flat list of { path: string, type: 'blob' | 'tree', ... }
+
+    const files: FileInfo[] = [];
+    const processedPaths = new Set<string>();
+
+    for (const pattern of paths) {
+      // Find all matching files in the repo
+      const matches = rawStructure.filter(item =>
+        item.type === 'blob' && matchPattern(item.path, pattern)
+      );
+
+      if (matches.length === 0) {
+        console.warn(`[CodebaseAnalyzer] No files found matching pattern: ${pattern}`);
+        continue;
+      }
+
+      for (const match of matches) {
+        if (processedPaths.has(match.path)) continue;
+        processedPaths.add(match.path);
+
+        console.log(`[CodebaseAnalyzer] Found relevant file: ${match.path}`);
+        files.push({
+          path: match.path,
+          description: `File at ${match.path}`,
+          language: this.detectLanguage(match.path),
+        });
+      }
+    }
+
+    return files;
   }
 
   /**

@@ -1,3 +1,12 @@
+import 'dotenv/config';
+import { v4 as uuidv4 } from 'uuid';
+
+// Set required environment variables for this specific agent type
+process.env.AGENT_TYPE = 'scrum_master';
+if (!process.env.AGENT_INSTANCE_ID) {
+  process.env.AGENT_INSTANCE_ID = `sm-${uuidv4().substring(0, 8)}`;
+}
+
 /**
  * Scrum Master Agent Runner
  *

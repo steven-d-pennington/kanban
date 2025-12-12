@@ -85,7 +85,8 @@ export async function validateOutput(
 export async function completeAndHandoff(
   workItemId: string,
   output: Record<string, unknown>,
-  childItems: ChildItemSpec[] = []
+  childItems: ChildItemSpec[] = [],
+  options?: { targetStatus?: string }
 ): Promise<HandoffResult> {
   const logger = new ActivityLogger(workItemId);
 
@@ -97,6 +98,7 @@ export async function completeAndHandoff(
       p_agent_instance_id: AGENT_INSTANCE_ID,
       p_output: output,
       p_child_items: childItems,
+      p_target_status: (options?.targetStatus || 'done'),
     });
 
     if (error) {

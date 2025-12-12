@@ -40,7 +40,7 @@ export function KanbanColumn({ id, title, items, onAddItem }: KanbanColumnProps)
             className="p-1 hover:bg-gray-200 rounded transition-colors"
             title="Add item"
           >
-            <Plus className="w-4 h-4 text-gray-500" />
+            <Plus className="w-4 h-4 text-gray-600" />
           </button>
         )}
       </div>
@@ -61,8 +61,8 @@ export function KanbanColumn({ id, title, items, onAddItem }: KanbanColumnProps)
         </SortableContext>
 
         {items.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-            <p className="text-sm">No items</p>
+          <div className="flex flex-col items-center justify-center py-8">
+            <p className="text-sm text-gray-500">No items</p>
           </div>
         )}
       </div>

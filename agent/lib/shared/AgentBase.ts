@@ -166,12 +166,14 @@ export abstract class AgentBase implements AgentProcessor {
     options: {
       output: Record<string, unknown>;
       childItems?: ChildItemSpec[];
+      targetStatus?: string;
     }
   ): Promise<void> {
     await completeAndHandoff(
       item.id,
       options.output,
-      options.childItems || []
+      options.childItems || [],
+      { targetStatus: options.targetStatus }
     );
   }
 

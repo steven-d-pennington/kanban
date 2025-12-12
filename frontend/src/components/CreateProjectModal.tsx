@@ -32,7 +32,7 @@ export function CreateProjectModal() {
         name: name.trim(),
         description: description.trim(),
         status: 'active',
-        createdBy: 'current-user',
+
       });
 
       toast.success(`Project "${name}" created successfully`);

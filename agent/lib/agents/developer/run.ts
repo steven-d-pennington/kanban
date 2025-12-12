@@ -1,3 +1,12 @@
+import 'dotenv/config';
+import { v4 as uuidv4 } from 'uuid';
+
+// Set required environment variables for this specific agent type
+process.env.AGENT_TYPE = 'developer';
+if (!process.env.AGENT_INSTANCE_ID) {
+  process.env.AGENT_INSTANCE_ID = `dev-${uuidv4().substring(0, 8)}`;
+}
+
 /**
  * Developer Agent Runner
  *
@@ -29,6 +38,13 @@ async function main() {
 
   if (process.env.GITHUB_TOKEN) {
     console.log('GitHub integration: enabled');
+    const verification = await agent.verifyGitHubAccess();
+    if (verification.success) {
+      console.log(`GitHub check passed: ${verification.message}`);
+    } else {
+      console.warn(`GitHub check failed: ${verification.message}`);
+      // Only warn, don't exit, as file generation can still work
+    }
   } else {
     console.log('GitHub integration: disabled (no GITHUB_TOKEN)');
   }

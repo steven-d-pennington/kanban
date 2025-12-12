@@ -96,9 +96,7 @@ CREATE INDEX idx_agent_activity_action ON agent_activity(action);
 CREATE INDEX idx_agent_activity_created_at ON agent_activity(created_at DESC);
 CREATE INDEX idx_agent_activity_status ON agent_activity(status);
 
--- Partial index for recent activity (last 7 days)
-CREATE INDEX idx_agent_activity_recent ON agent_activity(created_at DESC)
-  WHERE created_at > NOW() - INTERVAL '7 days';
+
 
 -- =============================================================================
 -- COMMENTS TABLE
