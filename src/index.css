@@ -1,0 +1,247 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-background: 255 255 255;
+    --color-foreground: 17 24 39;
+    --color-primary: 59 130 246;
+    --color-primary-foreground: 255 255 255;
+    --color-secondary: 243 244 246;
+    --color-secondary-foreground: 17 24 39;
+    --color-muted: 249 250 251;
+    --color-muted-foreground: 107 114 128;
+    --color-accent: 243 244 246;
+    --color-accent-foreground: 17 24 39;
+    --color-border: 229 231 235;
+    --color-input: 255 255 255;
+    --color-ring: 59 130 246;
+  }
+
+  * {
+    @apply border-gray-200;
+  }
+
+  body {
+    @apply bg-white text-gray-900 antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* Form elements */
+  input,
+  textarea,
+  select {
+    @apply text-gray-900 bg-white border-gray-300 placeholder-gray-500;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 border-blue-500;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  textarea,
+  select {
+    @apply px-3 py-2 border border-gray-300 rounded-md shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply disabled:bg-gray-50 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply text-blue-600 border-gray-300 rounded;
+    @apply focus:ring-blue-500 focus:ring-2 focus:ring-offset-2;
+  }
+
+  /* Button elements */
+  button {
+    @apply text-gray-900 cursor-pointer;
+  }
+
+  button:disabled {
+    @apply cursor-not-allowed opacity-50;
+  }
+
+  /* Link elements */
+  a {
+    @apply text-blue-600 hover:text-blue-700 focus:text-blue-700;
+  }
+
+  a:focus {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 rounded;
+  }
+
+  /* Heading elements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-gray-900 font-semibold;
+  }
+
+  h1 {
+    @apply text-3xl;
+  }
+
+  h2 {
+    @apply text-2xl;
+  }
+
+  h3 {
+    @apply text-xl;
+  }
+
+  h4 {
+    @apply text-lg;
+  }
+
+  h5 {
+    @apply text-base;
+  }
+
+  h6 {
+    @apply text-sm;
+  }
+
+  /* Text elements */
+  p {
+    @apply text-gray-900 leading-relaxed;
+  }
+
+  code {
+    @apply bg-gray-100 text-gray-900 px-1 py-0.5 rounded text-sm font-mono;
+  }
+
+  pre {
+    @apply bg-gray-100 text-gray-900 p-4 rounded-lg overflow-x-auto;
+  }
+
+  pre code {
+    @apply bg-transparent p-0;
+  }
+
+  /* List elements */
+  ul, ol {
+    @apply text-gray-900;
+  }
+
+  /* Table elements */
+  table {
+    @apply text-gray-900 border-collapse;
+  }
+
+  th {
+    @apply text-gray-900 font-semibold bg-gray-50 border border-gray-200;
+  }
+
+  td {
+    @apply text-gray-900 border border-gray-200;
+  }
+
+  /* Form labels */
+  label {
+    @apply text-gray-900 font-medium;
+  }
+
+  /* Selection styles */
+  ::selection {
+    @apply bg-blue-100 text-blue-900;
+  }
+
+  /* Focus styles for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    body {
+      @apply text-black;
+    }
+    
+    input, textarea, select {
+      @apply text-black border-black;
+    }
+    
+    button {
+      @apply text-black;
+    }
+    
+    a {
+      @apply text-blue-800;
+    }
+  }
+
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background: 17 24 39;
+      --color-foreground: 243 244 246;
+      --color-muted: 55 65 81;
+      --color-muted-foreground: 156 163 175;
+      --color-border: 75 85 99;
+      --color-input: 31 41 55;
+    }
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 rounded-md font-medium;
+    @apply hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    @apply disabled:bg-gray-400 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-900 px-4 py-2 rounded-md font-medium;
+    @apply hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+    @apply disabled:bg-gray-100 disabled:cursor-not-allowed;
+  }
+
+  .form-group {
+    @apply space-y-2;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-900;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply text-gray-900 placeholder-gray-500;
+  }
+
+  .form-error {
+    @apply text-sm text-red-600 mt-1;
+  }
+
+  .card {
+    @apply bg-white border border-gray-200 rounded-lg shadow-sm p-6;
+  }
+
+  .alert-info {
+    @apply bg-blue-50 text-blue-800 border border-blue-200 p-4 rounded-md;
+  }
+
+  .alert-success {
+    @apply bg-green-50 text-green-800 border border-green-200 p-4 rounded-md;
+  }
+
+  .alert-warning {
+    @apply bg-yellow-50 text-yellow-800 border border-yellow-200 p-4 rounded-md;
+  }
+
+  .alert-error {
+    @apply bg-red-50 text-red-800 border border-red-200 p-4 rounded-md;
+  }
+}
