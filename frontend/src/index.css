@@ -44,8 +44,45 @@
   * {
     @apply border-gray-200;
   }
+  
   body {
-    @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-50;
+    @apply text-gray-900 bg-white;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .dark body {
+    @apply text-gray-100 bg-gray-900;
+  }
+}
+
+@layer utilities {
+  /* Accessible text combinations */
+  .text-accessible-primary {
+    @apply text-gray-900 dark:text-gray-100;
+  }
+
+  .text-accessible-secondary {
+    @apply text-gray-700 dark:text-gray-300;
+  }
+
+  .text-accessible-muted {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+
+  .text-accessible-inverse {
+    @apply text-gray-100 dark:text-gray-900;
+  }
+
+  /* High contrast combinations */
+  .bg-accessible-light {
+    @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+  }
+
+  .bg-accessible-dark {
+    @apply bg-gray-900 text-gray-100 dark:bg-white dark:text-gray-900;
+  }
+
+  .bg-accessible-surface {
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-gray-100;
   }
 }

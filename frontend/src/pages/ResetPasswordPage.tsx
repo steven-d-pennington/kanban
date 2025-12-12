@@ -31,7 +31,7 @@ export function ResetPasswordPage({ onSwitchToLogin }: ResetPasswordPageProps) {
             <Check className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Check Your Email</h1>
-          <p className="text-gray-600 mt-2 mb-6">
+          <p className="text-gray-700 mt-2 mb-6">
             We've sent a password reset link to <strong>{email}</strong>. Click the link to reset your password.
           </p>
           <button
@@ -61,7 +61,7 @@ export function ResetPasswordPage({ onSwitchToLogin }: ResetPasswordPageProps) {
             <KeyRound className="w-8 h-8 text-amber-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Reset Password</h1>
-          <p className="text-gray-600 mt-2">Enter your email to receive a reset link</p>
+          <p className="text-gray-700 mt-2">Enter your email to receive a reset link</p>
         </div>
 
         {error && (
