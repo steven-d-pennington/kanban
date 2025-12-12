@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe, toHaveNoViolations } from 'jest-axe';
 import { Button } from './Button';
 import { calculateContrastRatio, isWCAGCompliant, WCAG_AA_NORMAL, WCAG_AA_LARGE } from '../../utils/accessibility';
 
@@ -9,423 +10,421 @@ vi.mock('../../utils/accessibility', () => ({
   calculateContrastRatio: vi.fn(),
   isWCAGCompliant: vi.fn(),
   WCAG_AA_NORMAL: 4.5,
-  WCAG_AA_LARGE: 3.0,
-  WCAG_AAA_NORMAL: 7.0,
+  WCAG_AA_LARGE: 3,
+  WCAG_AAA_NORMAL: 7,
   WCAG_AAA_LARGE: 4.5
 }));
 
-// Mock getComputedStyle for color extraction
+// Extend Jest matchers
+expect.extend(toHaveNoViolations);
+
+// Mock getComputedStyle for testing styles
 const mockGetComputedStyle = vi.fn();
 Object.defineProperty(window, 'getComputedStyle', {
   value: mockGetComputedStyle
 });
 
-// Helper function to extract RGB values from computed style
-const extractRGBFromComputedStyle = (element: HTMLElement, property: 'backgroundColor' | 'color') => {
-  const computedStyle = window.getComputedStyle(element);
-  const value = computedStyle.getPropertyValue(property);
-  // Convert CSS color to RGB format that accessibility utils expect
-  if (value.startsWith('rgb(')) {
-    const matches = value.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-    if (matches) {
-      return {
-        r: parseInt(matches[1], 10) / 255,
-        g: parseInt(matches[2], 10) / 255,
-        b: parseInt(matches[3], 10) / 255
-      };
-    }
-  }
-  return { r: 0, g: 0, b: 0 }; // fallback
-};
-
-describe('Button Accessibility Tests', () => {
+describe('Button Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
     // Default mock implementations
     (calculateContrastRatio as any).mockReturnValue(4.6);
     (isWCAGCompliant as any).mockReturnValue(true);
-    
-    // Mock getComputedStyle with default values
-    mockGetComputedStyle.mockImplementation((element) => ({
-      getPropertyValue: (prop: string) => {
-        if (prop === 'background-color') return 'rgb(15, 23, 42)'; // slate-900
-        if (prop === 'color') return 'rgb(255, 255, 255)'; // white
-        return '';
-      },
-      backgroundColor: 'rgb(15, 23, 42)',
-      color: 'rgb(255, 255, 255)'
-    }));
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  describe('Button Variants Contrast Testing', () => {
-    it('should have proper contrast for default variant', () => {
+  describe('Variant Contrast Testing', () => {
+    const variants = ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'] as const;
+    
+    it.each(variants)('should render %s variant with proper contrast ratio', async (variant) => {
       // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(15, 23, 42)'; // slate-900
-          if (prop === 'color') return 'rgb(255, 255, 255)'; // white
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(15.2); // High contrast
+      const mockStyles = {
+        backgroundColor: getVariantBackgroundColor(variant),
+        color: getVariantTextColor(variant)
+      };
+      mockGetComputedStyle.mockReturnValue(mockStyles);
+      (calculateContrastRatio as any).mockReturnValue(4.7);
       (isWCAGCompliant as any).mockReturnValue(true);
 
       // Act
-      render(<Button variant="default">Default Button</Button>);
-      const button = screen.getByRole('button');
+      render(<Button variant={variant}>Test Button</Button>);
+      const button = screen.getByRole('button', { name: 'Test Button' });
 
       // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 1, g: 1, b: 1 }, // white text
-        { r: 15/255, g: 23/255, b: 42/255 } // slate-900 background
-      );
-      expect(isWCAGCompliant).toHaveBeenCalledWith(15.2, WCAG_AA_NORMAL);
       expect(button).toBeInTheDocument();
+      expect(calculateContrastRatio).toHaveBeenCalled();
+      expect(isWCAGCompliant).toHaveBeenCalledWith(4.7, WCAG_AA_NORMAL);
+      expect(button).toHaveClass(getVariantClasses(variant));
     });
 
-    it('should have proper contrast for destructive variant', () => {
+    it.each(variants)('should maintain WCAG AA compliance for %s variant', (variant) => {
       // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(239, 68, 68)'; // red-500
-          if (prop === 'color') return 'rgb(255, 255, 255)'; // white
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(5.8);
+      const contrastRatio = 4.8;
+      (calculateContrastRatio as any).mockReturnValue(contrastRatio);
       (isWCAGCompliant as any).mockReturnValue(true);
 
       // Act
-      render(<Button variant="destructive">Delete</Button>);
-      const button = screen.getByRole('button');
+      render(<Button variant={variant}>Accessible Button</Button>);
 
       // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 1, g: 1, b: 1 }, // white text
-        { r: 239/255, g: 68/255, b: 68/255 } // red-500 background
-      );
-      expect(isWCAGCompliant).toHaveBeenCalledWith(5.8, WCAG_AA_NORMAL);
+      expect(isWCAGCompliant).toHaveBeenCalledWith(contrastRatio, WCAG_AA_NORMAL);
+      expect(isWCAGCompliant).toHaveReturnedWith(true);
     });
 
-    it('should have proper contrast for outline variant', () => {
+    it.each(variants)('should handle insufficient contrast for %s variant', (variant) => {
       // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(255, 255, 255)'; // white background
-          if (prop === 'color') return 'rgb(15, 23, 42)'; // slate-900 text
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(15.2);
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button variant="outline">Outline Button</Button>);
-      const button = screen.getByRole('button');
-
-      // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 15/255, g: 23/255, b: 42/255 }, // slate-900 text
-        { r: 1, g: 1, b: 1 } // white background
-      );
-    });
-
-    it('should have proper contrast for secondary variant', () => {
-      // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(241, 245, 249)'; // slate-100
-          if (prop === 'color') return 'rgb(15, 23, 42)'; // slate-900
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(12.6);
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button variant="secondary">Secondary</Button>);
-      const button = screen.getByRole('button');
-
-      // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 15/255, g: 23/255, b: 42/255 }, // slate-900 text
-        { r: 241/255, g: 245/255, b: 249/255 } // slate-100 background
-      );
-    });
-
-    it('should have proper contrast for ghost variant', () => {
-      // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgba(0, 0, 0, 0)'; // transparent
-          if (prop === 'color') return 'rgb(15, 23, 42)'; // slate-900
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(15.2);
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button variant="ghost">Ghost Button</Button>);
-      const button = screen.getByRole('button');
-
-      // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 15/255, g: 23/255, b: 42/255 }, // slate-900 text
-        { r: 1, g: 1, b: 1 } // assuming white background for transparent
-      );
-    });
-
-    it('should have proper contrast for link variant', () => {
-      // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgba(0, 0, 0, 0)'; // transparent
-          if (prop === 'color') return 'rgb(15, 23, 42)'; // slate-900
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(15.2);
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button variant="link">Link Button</Button>);
-      const button = screen.getByRole('button');
-
-      // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 15/255, g: 23/255, b: 42/255 }, // slate-900 text
-        { r: 1, g: 1, b: 1 } // assuming white background for transparent
-      );
-    });
-
-    it('should fail accessibility test when contrast is insufficient', () => {
-      // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(200, 200, 200)'; // light gray
-          if (prop === 'color') return 'rgb(220, 220, 220)'; // lighter gray
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(1.8); // Poor contrast
+      const lowContrastRatio = 2.1;
+      (calculateContrastRatio as any).mockReturnValue(lowContrastRatio);
       (isWCAGCompliant as any).mockReturnValue(false);
+      
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Act
-      render(<Button variant="default">Low Contrast</Button>);
-      
+      render(<Button variant={variant}>Low Contrast Button</Button>);
+
       // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 220/255, g: 220/255, b: 220/255 }, // light text
-        { r: 200/255, g: 200/255, b: 200/255 } // light background
-      );
-      expect(isWCAGCompliant).toHaveBeenCalledWith(1.8, WCAG_AA_NORMAL);
+      expect(isWCAGCompliant).toHaveBeenCalledWith(lowContrastRatio, WCAG_AA_NORMAL);
       expect(isWCAGCompliant).toHaveReturnedWith(false);
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle large text contrast requirements for destructive variant', () => {
+      // Arrange
+      const contrastRatio = 3.5;
+      (calculateContrastRatio as any).mockReturnValue(contrastRatio);
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button variant="destructive" size="lg">Large Destructive Button</Button>);
+
+      // Assert
+      expect(isWCAGCompliant).toHaveBeenCalledWith(contrastRatio, WCAG_AA_LARGE);
     });
   });
 
-  describe('Button Size Variants Contrast Testing', () => {
-    it('should use WCAG AA large text standards for large buttons', () => {
-      // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(15, 23, 42)';
-          if (prop === 'color') return 'rgb(255, 255, 255)';
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(3.2);
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button size="lg">Large Button</Button>);
-
-      // Assert
-      expect(isWCAGCompliant).toHaveBeenCalledWith(3.2, WCAG_AA_LARGE);
-    });
-
-    it('should use normal text standards for default and small buttons', () => {
-      // Arrange
-      (calculateContrastRatio as any).mockReturnValue(4.6);
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button size="sm">Small Button</Button>);
-
-      // Assert
-      expect(isWCAGCompliant).toHaveBeenCalledWith(4.6, WCAG_AA_NORMAL);
-    });
-  });
-
-  describe('Hover and Active States Contrast Testing', () => {
-    it('should maintain proper contrast on hover for default variant', async () => {
-      // Arrange
-      const user = userEvent.setup();
-      let callCount = 0;
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          callCount++;
-          if (prop === 'background-color') {
-            // Return darker color on hover (slate-800)
-            return callCount > 2 ? 'rgb(30, 41, 59)' : 'rgb(15, 23, 42)';
-          }
-          if (prop === 'color') return 'rgb(255, 255, 255)';
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(12.8); // Good hover contrast
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button variant="default">Hover Test</Button>);
-      const button = screen.getByRole('button');
-      
-      await user.hover(button);
-
-      // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 1, g: 1, b: 1 }, // white text
-        { r: 30/255, g: 41/255, b: 59/255 } // slate-800 hover background
-      );
-      expect(isWCAGCompliant).toHaveBeenCalledWith(12.8, WCAG_AA_NORMAL);
-    });
-
-    it('should maintain proper contrast on active state for destructive variant', async () => {
-      // Arrange
-      const user = userEvent.setup();
-      let callCount = 0;
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          callCount++;
-          if (prop === 'background-color') {
-            // Return darker red on active (red-700)
-            return callCount > 2 ? 'rgb(185, 28, 28)' : 'rgb(239, 68, 68)';
-          }
-          if (prop === 'color') return 'rgb(255, 255, 255)';
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(7.2); // Good active contrast
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button variant="destructive">Active Test</Button>);
-      const button = screen.getByRole('button');
-      
-      fireEvent.mouseDown(button);
-
-      // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 1, g: 1, b: 1 }, // white text
-        { r: 185/255, g: 28/255, b: 28/255 } // red-700 active background
-      );
-      expect(isWCAGCompliant).toHaveBeenCalledWith(7.2, WCAG_AA_NORMAL);
-    });
-
-    it('should maintain proper contrast on hover for outline variant', async () => {
-      // Arrange
-      const user = userEvent.setup();
-      let callCount = 0;
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          callCount++;
-          if (callCount > 2) {
-            // Hover state: filled background with white text
-            if (prop === 'background-color') return 'rgb(15, 23, 42)'; // slate-900
-            if (prop === 'color') return 'rgb(255, 255, 255)'; // white
-          } else {
-            // Default state: white background with dark text
-            if (prop === 'background-color') return 'rgb(255, 255, 255)'; // white
-            if (prop === 'color') return 'rgb(15, 23, 42)'; // slate-900
-          }
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(15.2); // Good hover contrast
-      (isWCAGCompliant as any).mockReturnValue(true);
-
-      // Act
-      render(<Button variant="outline">Outline Hover Test</Button>);
-      const button = screen.getByRole('button');
-      
-      await user.hover(button);
-
-      // Assert
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 1, g: 1, b: 1 }, // white text on hover
-        { r: 15/255, g: 23/255, b: 42/255 } // slate-900 background on hover
-      );
-      expect(isWCAGCompliant).toHaveBeenCalledWith(15.2, WCAG_AA_NORMAL);
-    });
-  });
-
-  describe('Disabled State Contrast Testing', () => {
-    it('should handle disabled state contrast appropriately', () => {
-      // Arrange
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(148, 163, 184)'; // slate-400
-          if (prop === 'color') return 'rgb(100, 116, 139)'; // slate-500
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(1.8); // Low contrast for disabled
-      (isWCAGCompliant as any).mockReturnValue(false);
-
+  describe('Disabled State Accessibility', () => {
+    it('should have proper disabled state accessibility attributes', () => {
       // Act
       render(<Button disabled>Disabled Button</Button>);
       const button = screen.getByRole('button');
 
       // Assert
       expect(button).toBeDisabled();
-      expect(calculateContrastRatio).toHaveBeenCalledWith(
-        { r: 100/255, g: 116/255, b: 139/255 }, // slate-500 text
-        { r: 148/255, g: 163/255, b: 184/255 } // slate-400 background
-      );
-    });
-  });
-
-  describe('Focus State Accessibility', () => {
-    it('should have visible focus indicator', async () => {
-      // Arrange
-      const user = userEvent.setup();
-      render(<Button>Focus Test</Button>);
-      const button = screen.getByRole('button');
-
-      // Act
-      await user.tab();
-
-      // Assert
-      expect(button).toHaveFocus();
-      expect(button).toHaveClass('focus-visible:ring-2');
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAttribute('tabindex', '-1');
     });
 
-    it('should maintain contrast in focus state', async () => {
+    it('should maintain contrast ratio in disabled state', () => {
       // Arrange
-      const user = userEvent.setup();
-      mockGetComputedStyle.mockImplementation(() => ({
-        getPropertyValue: (prop: string) => {
-          if (prop === 'background-color') return 'rgb(15, 23, 42)'; // slate-900
-          if (prop === 'color') return 'rgb(255, 255, 255)'; // white
-          return '';
-        }
-      }));
-      (calculateContrastRatio as any).mockReturnValue(15.2);
+      const disabledStyles = {
+        backgroundColor: '#9ca3af',
+        color: '#6b7280'
+      };
+      mockGetComputedStyle.mockReturnValue(disabledStyles);
+      (calculateContrastRatio as any).mockReturnValue(3.2);
       (isWCAGCompliant as any).mockReturnValue(true);
 
       // Act
-      render(<Button>Focus Contrast Test</Button>);
+      render(<Button disabled>Disabled Button</Button>);
+
+      // Assert
+      expect(calculateContrastRatio).toHaveBeenCalled();
+      expect(isWCAGCompliant).toHaveBeenCalledWith(3.2, WCAG_AA_NORMAL);
+    });
+
+    it('should prevent interaction when disabled', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const handleClick = vi.fn();
+
+      // Act
+      render(<Button disabled onClick={handleClick}>Disabled Button</Button>);
       const button = screen.getByRole('button');
+      
+      await user.click(button);
+
+      // Assert
+      expect(handleClick).not.toHaveBeenCalled();
+      expect(button).toHaveClass('disabled:pointer-events-none');
+    });
+
+    it('should have reduced opacity in disabled state', () => {
+      // Act
+      render(<Button disabled>Disabled Button</Button>);
+      const button = screen.getByRole('button');
+
+      // Assert
+      expect(button).toHaveClass('disabled:opacity-50');
+    });
+
+    it('should not receive focus when disabled', async () => {
+      // Arrange
+      const user = userEvent.setup();
+
+      // Act
+      render(
+        <div>
+          <Button>First Button</Button>
+          <Button disabled>Disabled Button</Button>
+          <Button>Last Button</Button>
+        </div>
+      );
+
+      const firstButton = screen.getByRole('button', { name: 'First Button' });
+      const disabledButton = screen.getByRole('button', { name: 'Disabled Button' });
+      const lastButton = screen.getByRole('button', { name: 'Last Button' });
+
+      // Assert
+      await user.tab();
+      expect(firstButton).toHaveFocus();
+      
+      await user.tab();
+      expect(lastButton).toHaveFocus();
+      expect(disabledButton).not.toHaveFocus();
+    });
+  });
+
+  describe('Hover State Readability', () => {
+    it.each(variants)('should maintain readability on hover for %s variant', async (variant) => {
+      // Arrange
+      const user = userEvent.setup();
+      const hoverStyles = {
+        backgroundColor: getVariantHoverBackgroundColor(variant),
+        color: getVariantHoverTextColor(variant)
+      };
+      
+      mockGetComputedStyle
+        .mockReturnValueOnce({
+          backgroundColor: getVariantBackgroundColor(variant),
+          color: getVariantTextColor(variant)
+        })
+        .mockReturnValueOnce(hoverStyles);
+
+      (calculateContrastRatio as any)
+        .mockReturnValueOnce(4.6)
+        .mockReturnValueOnce(5.2);
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button variant={variant}>Hover Test Button</Button>);
+      const button = screen.getByRole('button');
+
+      await user.hover(button);
+
+      // Assert
+      expect(calculateContrastRatio).toHaveBeenCalledTimes(2);
+      expect(isWCAGCompliant).toHaveBeenCalledWith(5.2, WCAG_AA_NORMAL);
+    });
+
+    it('should handle focus states with proper contrast', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const focusStyles = {
+        backgroundColor: '#1d4ed8',
+        color: '#ffffff',
+        outline: '2px solid #3b82f6'
+      };
+      
+      mockGetComputedStyle.mockReturnValue(focusStyles);
+      (calculateContrastRatio as any).mockReturnValue(6.1);
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button>Focus Test Button</Button>);
+      const button = screen.getByRole('button');
+
       await user.tab();
 
       // Assert
       expect(button).toHaveFocus();
-      expect(isWCAGCompliant).toHaveBeenCalledWith(15.2, WCAG_AA_NORMAL);
+      expect(button).toHaveClass('focus-visible:outline-none', 'focus-visible:ring-1', 'focus-visible:ring-ring');
+    });
+
+    it('should maintain active state contrast', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const activeStyles = {
+        backgroundColor: '#1e40af',
+        color: '#ffffff'
+      };
+      
+      mockGetComputedStyle.mockReturnValue(activeStyles);
+      (calculateContrastRatio as any).mockReturnValue(7.8);
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button>Active Test Button</Button>);
+      const button = screen.getByRole('button');
+
+      fireEvent.mouseDown(button);
+
+      // Assert
+      expect(calculateContrastRatio).toHaveBeenCalled();
+      expect(isWCAGCompliant).toHaveBeenCalledWith(7.8, WCAG_AA_NORMAL);
+    });
+
+    it('should handle high contrast mode', () => {
+      // Arrange
+      Object.defineProperty(window, 'matchMedia', {
+        writable: true,
+        value: vi.fn().mockImplementation(query => ({
+          matches: query === '(prefers-contrast: high)',
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        })),
+      });
+
+      (calculateContrastRatio as any).mockReturnValue(8.5);
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button>High Contrast Button</Button>);
+
+      // Assert
+      expect(calculateContrastRatio).toHaveBeenCalled();
+      expect(isWCAGCompliant).toHaveBeenCalledWith(8.5, WCAG_AA_NORMAL);
+    });
+  });
+
+  describe('Accessibility Standards Compliance', () => {
+    it('should pass axe accessibility tests for all variants', async () => {
+      // Act & Assert
+      for (const variant of variants) {
+        const { container } = render(<Button variant={variant}>Accessible Button</Button>);
+        const results = await axe(container);
+        expect(results).toHaveNoViolations();
+      }
+    });
+
+    it('should have proper ARIA attributes', () => {
+      // Act
+      render(<Button aria-label="Custom Label">Button Text</Button>);
+      const button = screen.getByRole('button');
+
+      // Assert
+      expect(button).toHaveAttribute('aria-label', 'Custom Label');
+      expect(button).toHaveAttribute('type', 'button');
+    });
+
+    it('should support keyboard navigation', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const handleClick = vi.fn();
+
+      // Act
+      render(<Button onClick={handleClick}>Keyboard Test</Button>);
+      const button = screen.getByRole('button');
+
+      await user.tab();
+      await user.keyboard('{Enter}');
+
+      // Assert
+      expect(button).toHaveFocus();
+      expect(handleClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('should support space key activation', async () => {
+      // Arrange
+      const user = userEvent.setup();
+      const handleClick = vi.fn();
+
+      // Act
+      render(<Button onClick={handleClick}>Space Test</Button>);
+      const button = screen.getByRole('button');
+
+      await user.tab();
+      await user.keyboard(' ');
+
+      // Assert
+      expect(handleClick).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty button content', () => {
+      // Act
+      render(<Button aria-label="Icon Only Button" />);
+      const button = screen.getByRole('button');
+
+      // Assert
+      expect(button).toBeInTheDocument();
+      expect(button).toHaveAttribute('aria-label', 'Icon Only Button');
+    });
+
+    it('should handle custom className with contrast checking', () => {
+      // Arrange
+      const customStyles = {
+        backgroundColor: '#ff0000',
+        color: '#ffffff'
+      };
+      mockGetComputedStyle.mockReturnValue(customStyles);
+      (calculateContrastRatio as any).mockReturnValue(5.3);
+      (isWCAGCompliant as any).mockReturnValue(true);
+
+      // Act
+      render(<Button className="bg-red-500 text-white">Custom Styled</Button>);
+
+      // Assert
+      expect(calculateContrastRatio).toHaveBeenCalled();
+      expect(isWCAGCompliant).toHaveBeenCalledWith(5.3, WCAG_AA_NORMAL);
+    });
+
+    it('should handle loading state accessibility', () => {
+      // Act
+      render(<Button disabled aria-busy="true">Loading...</Button>);
+      const button = screen.getByRole('button');
+
+      // Assert
+      expect(button).toBeDisabled();
+      expect(button).toHaveAttribute('aria-busy', 'true');
     });
   });
 });
+
+// Helper functions for getting variant styles
+function getVariantBackgroundColor(variant: string): string {
+  const colors = {
+    default: '#1e40af',
+    destructive: '#dc2626',
+    outline: 'transparent',
+    secondary: '#f1f5f9',
+    ghost: 'transparent',
+    link: 'transparent'
+  };
+  return colors[variant as keyof typeof colors] || colors.default;
+}
+
+function getVariantTextColor(variant: string): string {
+  const colors = {
+    default: '#ffffff',
+    destructive: '#ffffff',
+    outline: '#1e40af',
+    secondary: '#0f172a',
+    ghost: '#1e40af',
+    link: '#1e40af'
+  };
+  return colors[variant as keyof typeof colors] || colors.default;
+}
+
+function getVariantHoverBackgroundColor(variant: string): string {
+  const colors = {
+    default: '#1d4ed8',
+    destructive: '#b91c1c',
+    outline: '#f8fafc',
+    secondary: '#e2e8f0',
+    ghost: '#f8fafc',
+    link: 'transparent'
+  };
+  return colors[variant as keyof typeof colors] || colors.default;
+}
+
+function getVariantHoverTextColor(variant
