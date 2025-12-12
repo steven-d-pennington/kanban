@@ -29,15 +29,15 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     const variantClasses = {
       default: cn(
-        'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600',
-        'text-gray-900 dark:text-gray-100',
-        'focus:border-blue-500 dark:focus:border-blue-400',
+        'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600',
+        'text-gray-900 dark:text-white',
+        'focus:border-blue-600 dark:focus:border-blue-400',
         'focus:ring-blue-500/20 dark:focus:ring-blue-400/20',
       ),
       outline: cn(
         'bg-transparent border-gray-300 dark:border-gray-600',
-        'text-gray-900 dark:text-gray-100',
-        'focus:border-blue-500 dark:focus:border-blue-400',
+        'text-gray-900 dark:text-white',
+        'focus:border-blue-600 dark:focus:border-blue-400',
         'focus:ring-blue-500/20 dark:focus:ring-blue-400/20',
       ),
     };
@@ -47,16 +47,17 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       'focus:outline-none focus:ring-2',
       'appearance-none cursor-pointer',
       'disabled:opacity-50 disabled:cursor-not-allowed',
+      'placeholder:text-gray-500 dark:placeholder:text-gray-400',
       sizeClasses[size],
       variantClasses[variant],
-      error && 'border-red-500 dark:border-red-400 focus:border-red-500 focus:ring-red-500/20',
+      error && 'border-red-600 dark:border-red-400 focus:border-red-600 focus:ring-red-500/20',
       className
     );
 
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
             {label}
           </label>
         )}
@@ -76,7 +77,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{helperText}</p>
         )}
         <style jsx global>{`
           select option {
@@ -86,14 +87,14 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           
           @media (prefers-color-scheme: dark) {
             select option {
-              background-color: #1f2937;
-              color: #f3f4f6;
+              background-color: #111827;
+              color: #ffffff;
             }
           }
           
           [data-theme="dark"] select option {
-            background-color: #1f2937;
-            color: #f3f4f6;
+            background-color: #111827;
+            color: #ffffff;
           }
           
           [data-theme="light"] select option {
