@@ -315,3 +315,113 @@ describe('accessibility utilities', () => {
         variations.darker.forEach(color => {
           const ratio = calculateContrastRatio(color, '#ffffff');
           expect(ratio).toBeGreaterThan(calculateContrastRatio('#cccccc', '#ffffff'));
+        });
+      });
+
+      it('should not generate variations for already accessible combinations', () => {
+        const variations = generateAccessibleColorVariations('#000000', '#ffffff');
+        
+        expect(variations.lighter).toHaveLength(0);
+        expect(variations.darker).toHaveLength(0);
+      });
+
+      it('should generate appropriate number of variations', () => {
+        const variations = generateAccessibleColorVariations('#999999', '#ffffff');
+        
+        expect(variations.darker.length).toBeGreaterThan(0);
+        expect(variations.darker.length).toBeLessThanOrEqual(10);
+      });
+    });
+
+    describe('suggestAccessibleAlternatives', () => {
+      it('should suggest alternatives for inaccessible combinations', () => {
+        const suggestions = suggestAccessibleAlternatives('#cccccc', '#ffffff');
+        
+        expect(suggestions).toHaveProperty('foregroundOptions');
+        expect(suggestions).toHaveProperty('backgroundOptions');
+        expect(Array.isArray(suggestions.foregroundOptions)).toBe(true);
+        expect(Array.isArray(suggestions.backgroundOptions)).toBe(true);
+      });
+
+      it('should provide alternatives that meet minimum AA standards', () => {
+        const suggestions = suggestAccessibleAlternatives('#cccccc', '#ffffff');
+        
+        suggestions.foregroundOptions.forEach(option => {
+          const ratio = calculateContrastRatio(option.color, '#ffffff');
+          expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+        });
+      });
+
+      it('should include color information in suggestions', () => {
+        const suggestions = suggestAccessibleAlternatives('#cccccc', '#ffffff');
+        
+        if (suggestions.foregroundOptions.length > 0) {
+          const option = suggestions.foregroundOptions[0];
+          expect(option).toHaveProperty('color');
+          expect(option).toHaveProperty('ratio');
+          expect(option).toHaveProperty('level');
+          expect(typeof option.color).toBe('string');
+          expect(typeof option.ratio).toBe('number');
+          expect(typeof option.level).toBe('string');
+        }
+      });
+
+      it('should prioritize higher contrast alternatives', () => {
+        const suggestions = suggestAccessibleAlternatives('#888888', '#ffffff');
+        
+        if (suggestions.foregroundOptions.length > 1) {
+          for (let i = 1; i < suggestions.foregroundOptions.length; i++) {
+            expect(suggestions.foregroundOptions[i - 1].ratio)
+              .toBeGreaterThanOrEqual(suggestions.foregroundOptions[i].ratio);
+          }
+        }
+      });
+
+      it('should return empty arrays for already accessible combinations', () => {
+        const suggestions = suggestAccessibleAlternatives('#000000', '#ffffff');
+        
+        expect(suggestions.foregroundOptions).toHaveLength(0);
+        expect(suggestions.backgroundOptions).toHaveLength(0);
+      });
+    });
+  });
+
+  describe('Constants and predefined values', () => {
+    it('should export correct WCAG threshold constants', () => {
+      expect(WCAG_AA_NORMAL).toBe(4.5);
+      expect(WCAG_AA_LARGE).toBe(3);
+      expect(WCAG_AAA_NORMAL).toBe(7);
+      expect(WCAG_AAA_LARGE).toBe(4.5);
+    });
+
+    it('should provide accessible color pairs', () => {
+      expect(Array.isArray(ACCESSIBLE_COLOR_PAIRS)).toBe(true);
+      expect(ACCESSIBLE_COLOR_PAIRS.length).toBeGreaterThan(0);
+      
+      // Each pair should have foreground and background colors
+      ACCESSIBLE_COLOR_PAIRS.forEach(pair => {
+        expect(pair).toHaveProperty('foreground');
+        expect(pair).toHaveProperty('background');
+        expect(typeof pair.foreground).toBe('string');
+        expect(typeof pair.background).toBe('string');
+        
+        // Each pair should meet AA standards
+        const ratio = calculateContrastRatio(pair.foreground, pair.background);
+        expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL);
+      });
+    });
+
+    it('should include diverse color combinations in predefined pairs', () => {
+      // Check that we have both light and dark backgrounds
+      const lightBackgrounds = ACCESSIBLE_COLOR_PAIRS.filter(pair => 
+        getRelativeLuminance(pair.background) > 0.5
+      );
+      const darkBackgrounds = ACCESSIBLE_COLOR_PAIRS.filter(pair => 
+        getRelativeLuminance(pair.background) <= 0.5
+      );
+      
+      expect(lightBackgrounds.length).toBeGreaterThan(0);
+      expect(darkBackgrounds.length).toBeGreaterThan(0);
+    });
+  });
+});
