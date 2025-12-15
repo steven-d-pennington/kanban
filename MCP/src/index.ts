@@ -54,9 +54,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                         status: {
                             type: "string",
                             description: "Filter by status (default 'ready')",
-                            enum: ["todo", "ready", "in_progress", "in_review", "done"],
+                            enum: ["todo", "ready", "in_progress", "review", "done"],
                         },
                     },
+                },
+            },
+            {
+                name: "get_work_item",
+                description: "Get details of a specific work item by ID.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        work_item_id: {
+                            type: "string",
+                            description: "UUID of the work item",
+                        },
+                    },
+                    required: ["work_item_id"],
                 },
             },
             {
@@ -140,20 +154,50 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             };
         }
 
-        if (name === "claim_work_item") {
+        if (name === "get_work_item") {
             const work_item_id = String(args?.work_item_id);
-            const agent_type = String(args?.agent_type || "external");
-            const instance_id = `ext-${Date.now()}`; // Generate a session ID
 
-            const { data, error } = await supabase.rpc("claim_work_item", {
-                p_work_item_id: work_item_id,
-                p_agent_type: agent_type,
-                p_instance_id: instance_id,
-            });
+            const { data, error } = await supabase
+                .from("work_items")
+                .select("*")
+                .eq("id", work_item_id)
+                .single();
 
             if (error) throw new Error(error.message);
+            if (!data) throw new Error("Work item not found");
+
+            // Also fetch comments for this work item
+            const { data: comments } = await supabase
+                .from("comments")
+                .select("*")
+                .eq("work_item_id", work_item_id)
+                .order("created_at", { ascending: true });
+
             return {
-                content: [{ type: "text", text: `Successfully claimed item. Session ID: ${instance_id}` }],
+                content: [{ type: "text", text: JSON.stringify({ ...data, comments: comments || [] }, null, 2) }],
+            };
+        }
+
+        if (name === "claim_work_item") {
+            const work_item_id = String(args?.work_item_id);
+            const agent_type = String(args?.agent_type || "developer");
+            const instance_id = `ext-${Date.now()}`; // Generate a session ID
+
+            // Use direct database update instead of RPC
+            const { data, error } = await supabase
+                .from("work_items")
+                .update({
+                    status: "in_progress",
+                    assigned_agent: agent_type,
+                    started_at: new Date().toISOString(),
+                })
+                .eq("id", work_item_id)
+                .select();
+
+            if (error) throw new Error(error.message);
+            if (!data || data.length === 0) throw new Error("Work item not found");
+            return {
+                content: [{ type: "text", text: `Successfully claimed item "${data[0].title}". Session ID: ${instance_id}` }],
             };
         }
 
@@ -161,18 +205,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const work_item_id = String(args?.work_item_id);
             const content = String(args?.content);
 
+            // Use 'developer' as the agent type (valid value in the database)
             const { data, error } = await supabase
                 .from("comments")
                 .insert({
                     work_item_id,
                     content,
-                    author_agent: "external",
+                    author_agent: "developer",
                 })
                 .select();
 
             if (error) throw new Error(error.message);
             return {
-                content: [{ type: "text", text: "Comment added." }],
+                content: [{ type: "text", text: "Comment added successfully." }],
             };
         }
 
@@ -180,15 +225,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const work_item_id = String(args?.work_item_id);
             const summary = String(args?.summary || "Completed externally");
 
-            const { data, error } = await supabase.rpc("complete_work_item", {
-                p_work_item_id: work_item_id,
-                p_summary: summary,
-                p_next_status: "review",
-            });
+            // Use direct database update instead of RPC
+            const { data, error } = await supabase
+                .from("work_items")
+                .update({
+                    status: "review",
+                    completed_at: new Date().toISOString(),
+                })
+                .eq("id", work_item_id)
+                .select();
 
             if (error) throw new Error(error.message);
+            if (!data || data.length === 0) throw new Error("Work item not found");
+
+            // Add a completion comment if summary provided
+            if (summary && summary !== "Completed externally") {
+                await supabase.from("comments").insert({
+                    work_item_id,
+                    content: `Work completed: ${summary}`,
+                    author_agent: "developer",
+                });
+            }
+
             return {
-                content: [{ type: "text", text: "Work item completed and moved to review." }],
+                content: [{ type: "text", text: `Work item "${data[0].title}" completed and moved to review.` }],
             };
         }
 
