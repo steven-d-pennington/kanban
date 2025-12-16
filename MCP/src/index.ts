@@ -69,6 +69,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                             type: "string",
                             description: "Description of the project",
                         },
+                        user_id: {
+                            type: "string",
+                            description: "UUID of the user who owns this project (for RLS visibility)",
+                        },
                     },
                     required: ["name"],
                 },
@@ -219,6 +223,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                             type: "object",
                             description: "Additional metadata",
                         },
+                        user_id: {
+                            type: "string",
+                            description: "UUID of the user who created this item (for RLS visibility)",
+                        },
                     },
                     required: ["project_id", "title", "type"],
                 },
@@ -336,14 +344,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (name === "create_project") {
             const name_val = String(args?.name);
             const description = args?.description ? String(args.description) : "";
+            const user_id = args?.user_id ? String(args.user_id) : null;
+
+            const insertData: any = {
+                name: name_val,
+                description,
+                status: "active",
+            };
+            if (user_id) insertData.created_by = user_id;
 
             const { data, error } = await supabase
                 .from("projects")
-                .insert({
-                    name: name_val,
-                    description,
-                    status: "active",
-                })
+                .insert(insertData)
                 .select()
                 .single();
 
@@ -491,6 +503,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             const story_points = args?.story_points ? Number(args.story_points) : null;
             const labels = args?.labels || [];
             const metadata = args?.metadata || {};
+            const user_id = args?.user_id ? String(args.user_id) : null;
 
             const insertData: any = {
                 project_id,
@@ -505,6 +518,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
             if (parent_id) insertData.parent_id = parent_id;
             if (story_points) insertData.story_points = story_points;
+            if (user_id) insertData.created_by = user_id;
 
             const { data, error } = await supabase
                 .from("work_items")
@@ -610,6 +624,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     },
                 };
                 if (child.story_points) childData.story_points = child.story_points;
+                // Inherit created_by from parent work item for RLS visibility
+                if (workItem.created_by) childData.created_by = workItem.created_by;
 
                 const { data: newChild, error: childError } = await supabase
                     .from("work_items")
