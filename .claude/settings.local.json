@@ -14,7 +14,8 @@
       "Bash(git push:*)",
       "Bash(dir /s \"C:\\projects\\kanban\\frontend\\src\")",
       "Bash(dir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
