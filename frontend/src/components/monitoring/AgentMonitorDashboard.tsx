@@ -8,6 +8,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { useMonitoringStore } from '../../store/monitoringStore';
+import { useKanbanStore } from '../../store/kanbanStore';
 import { MetricCard } from './MetricCard';
 import { MonitoredAgentCard } from './MonitoredAgentCard';
 import { ActivityTimeline } from './ActivityTimeline';
@@ -15,6 +16,7 @@ import { AlertsPanel } from './AlertsPanel';
 import { PerformanceChart, SuccessRateChart } from './PerformanceChart';
 
 export function AgentMonitorDashboard() {
+  const { currentProjectId, projects } = useKanbanStore();
   const {
     agents,
     recentActivities,
@@ -30,22 +32,40 @@ export function AgentMonitorDashboard() {
     refreshAll,
   } = useMonitoringStore();
 
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
   useEffect(() => {
-    refreshAll();
-    const unsubscribe = subscribeToUpdates();
+    if (currentProjectId) {
+      refreshAll(currentProjectId);
+      const unsubscribe = subscribeToUpdates(currentProjectId);
 
-    // Refresh every 30 seconds
-    const interval = setInterval(refreshAll, 30000);
+      // Refresh every 30 seconds
+      const interval = setInterval(() => refreshAll(currentProjectId), 30000);
 
-    return () => {
-      unsubscribe();
-      clearInterval(interval);
-    };
-  }, [refreshAll, subscribeToUpdates]);
+      return () => {
+        unsubscribe();
+        clearInterval(interval);
+      };
+    }
+  }, [currentProjectId, refreshAll, subscribeToUpdates]);
 
   const handleRefresh = () => {
-    refreshAll();
+    if (currentProjectId) {
+      refreshAll(currentProjectId);
+    }
   };
+
+  if (!currentProjectId) {
+    return (
+      <div className="flex h-full items-center justify-center p-8">
+        <div className="text-center text-gray-500">
+          <Bot className="mx-auto h-12 w-12 text-gray-300" />
+          <p className="mt-3 font-medium">No project selected</p>
+          <p className="text-sm">Select a project to view agent monitoring</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading && agents.length === 0) {
     return (
@@ -65,7 +85,7 @@ export function AgentMonitorDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Agent Monitor</h1>
           <p className="text-sm text-gray-500">
-            Real-time monitoring of AI agent activity and health
+            Real-time monitoring for {currentProject?.name || 'current project'}
           </p>
         </div>
         <div className="flex items-center gap-4">

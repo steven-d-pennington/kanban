@@ -113,14 +113,14 @@ interface MonitoringState {
   };
 
   // Actions
-  fetchAgents: () => Promise<void>;
-  fetchRecentActivities: (limit?: number) => Promise<void>;
-  fetchAlerts: () => Promise<void>;
+  fetchAgents: (projectId?: string) => Promise<void>;
+  fetchRecentActivities: (projectId?: string, limit?: number) => Promise<void>;
+  fetchAlerts: (projectId?: string) => Promise<void>;
   acknowledgeAlert: (alertId: string) => void;
   pauseAgent: (agentId: string) => Promise<boolean>;
   resumeAgent: (agentId: string) => Promise<boolean>;
-  subscribeToUpdates: () => () => void;
-  refreshAll: () => Promise<void>;
+  subscribeToUpdates: (projectId?: string) => () => void;
+  refreshAll: (projectId?: string) => Promise<void>;
 }
 
 // Mock data for demo mode
@@ -324,7 +324,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
   lastUpdated: new Date().toISOString(),
   summaryStats: calculateSummaryStats(mockAgents),
 
-  fetchAgents: async () => {
+  fetchAgents: async (projectId?: string) => {
     set({ loading: true, error: null });
 
     try {
@@ -353,13 +353,18 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
       // Fetch metrics for each agent
       const enrichedAgents = await Promise.all(
         ((agentData || []) as AgentInstanceRow[]).map(async (agent) => {
-          // Get current task if any
-          const { data: taskData } = await sb
+          // Get current task if any - filter by project if provided
+          let taskQuery = sb
             .from('work_items')
             .select('id, title, started_at')
             .eq('metadata->>claimed_by_instance', agent.id)
-            .eq('status', 'in_progress')
-            .single();
+            .eq('status', 'in_progress');
+
+          if (projectId) {
+            taskQuery = taskQuery.eq('project_id', projectId);
+          }
+
+          const { data: taskData } = await taskQuery.single();
 
           // Get activity stats
           const { data: activityStats } = await sb
@@ -416,18 +421,25 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
   },
 
-  fetchRecentActivities: async (limit = 20) => {
+  fetchRecentActivities: async (projectId?: string, limit = 20) => {
     try {
       if (!supabase) {
         set({ recentActivities: mockActivities.slice(0, limit) });
         return;
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('agent_activity_feed')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);
+
+      // Filter by project_id if provided (agent_activity_feed view should include project_id)
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -448,26 +460,38 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
   },
 
-  fetchAlerts: async () => {
+  fetchAlerts: async (projectId?: string) => {
     try {
       if (!supabase) {
         set({ alerts: mockAlerts });
         return;
       }
 
-      // Fetch errors from recent activity
-      const { data: errorData } = await supabase
+      // Fetch errors from recent activity - filter by project if provided
+      let errorQuery = supabase
         .from('agent_activity_feed')
         .select('*')
         .eq('status', 'error')
         .order('created_at', { ascending: false })
         .limit(10);
 
-      // Fetch stale claims as warnings
-      const { data: staleData } = await supabase
+      if (projectId) {
+        errorQuery = errorQuery.eq('project_id', projectId);
+      }
+
+      const { data: errorData } = await errorQuery;
+
+      // Fetch stale claims as warnings - filter by project if provided
+      let staleQuery = supabase
         .from('agent_claimed_items')
         .select('*')
         .gt('claimed_minutes_ago', 30);
+
+      if (projectId) {
+        staleQuery = staleQuery.eq('project_id', projectId);
+      }
+
+      const { data: staleData } = await staleQuery;
 
       const alerts: SystemAlert[] = [];
 
@@ -567,7 +591,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     }
   },
 
-  subscribeToUpdates: () => {
+  subscribeToUpdates: (projectId?: string) => {
     if (!supabase) {
       // Demo mode - no real subscription, but simulate updates
       const interval = setInterval(() => {
@@ -587,7 +611,7 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
           schema: 'public',
           table: 'agent_instances',
         },
-        () => get().fetchAgents()
+        () => get().fetchAgents(projectId)
       )
       .on(
         'postgres_changes',
@@ -597,8 +621,8 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
           table: 'agent_activity',
         },
         () => {
-          get().fetchRecentActivities();
-          get().fetchAlerts();
+          get().fetchRecentActivities(projectId);
+          get().fetchAlerts(projectId);
         }
       )
       .subscribe();
@@ -608,11 +632,11 @@ export const useMonitoringStore = create<MonitoringState>((set, get) => ({
     };
   },
 
-  refreshAll: async () => {
+  refreshAll: async (projectId?: string) => {
     await Promise.all([
-      get().fetchAgents(),
-      get().fetchRecentActivities(),
-      get().fetchAlerts(),
+      get().fetchAgents(projectId),
+      get().fetchRecentActivities(projectId),
+      get().fetchAlerts(projectId),
     ]);
   },
 }));
