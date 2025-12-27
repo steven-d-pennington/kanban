@@ -26,6 +26,12 @@ const AnalyticsDashboard = lazy(() =>
   }))
 );
 
+const MemoryPage = lazy(() =>
+  import('./components/memory/MemoryPage').then((module) => ({
+    default: module.MemoryPage,
+  }))
+);
+
 // Loading spinner component for Suspense fallback
 function PageLoader() {
   return (
@@ -64,6 +70,12 @@ function App() {
         {currentPage === 'analytics' && (
           <Suspense fallback={<PageLoader />}>
             <AnalyticsDashboard />
+          </Suspense>
+        )}
+
+        {currentPage === 'memory' && (
+          <Suspense fallback={<PageLoader />}>
+            <MemoryPage />
           </Suspense>
         )}
 

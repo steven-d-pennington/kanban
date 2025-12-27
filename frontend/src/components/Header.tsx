@@ -4,12 +4,13 @@ import { UserMenu } from './UserMenu';
 import { ConnectionIndicator } from './ConnectionIndicator';
 import { PresenceAvatars } from './PresenceAvatars';
 import { ProjectSelector } from './ProjectSelector';
-import { Plus, Settings, Bot, LayoutDashboard, Activity, BarChart3 } from 'lucide-react';
+import { Plus, Settings, Bot, LayoutDashboard, Activity, BarChart3, Brain } from 'lucide-react';
 
 const navItems: { id: Page; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'board', label: 'Board', icon: LayoutDashboard },
   { id: 'monitoring', label: 'Monitoring', icon: Activity },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'memory', label: 'Memory', icon: Brain },
 ];
 
 export function Header() {

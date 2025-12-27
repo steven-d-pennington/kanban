@@ -1,0 +1,19 @@
+# Kanban MCP Configuration Example
+# Copy this file to your repository root as .kanban and configure your PROJECT_ID
+
+# Required: Your Kanban project UUID
+# Get this from the MCP server or the project database
+PROJECT_ID=your-project-uuid-here
+
+# Optional: Custom MCP server configuration
+# Uncomment and modify if you're using a non-standard setup
+# MCP_SERVER_URL=http://localhost:3000
+# MCP_SERVER_PATH=/custom/path/to/mcp/dist/index.js
+
+# Optional: Hook behavior settings
+# Uncomment to enable debug logging
+# DEBUG=true
+
+# Optional: Batch size for indexing
+# Default is 50 chunks per batch
+# BATCH_SIZE=100

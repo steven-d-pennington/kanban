@@ -196,3 +196,31 @@ export const AGENT_STATUS_CONFIG: Record<AgentActivityStatus, { label: string; c
   error: { label: 'Error', color: 'text-red-700', bgColor: 'bg-red-100' },
   warning: { label: 'Warning', color: 'text-yellow-700', bgColor: 'bg-yellow-100' },
 };
+
+export type MemoryType = 'decision' | 'pattern' | 'convention' | 'lesson' | 'architecture' | 'warning' | 'preference';
+
+export interface ProjectMemory {
+  id: string;
+  projectId: string;
+  memoryType: MemoryType;
+  title: string;
+  content: string;
+  sourceWorkItemId?: string;
+  createdByAgent?: string;
+  createdByUser?: string;
+  relevanceScore: number;
+  isGlobal: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const MEMORY_TYPE_CONFIG: Record<MemoryType, { label: string; color: string; bgColor: string; icon: string }> = {
+  decision: { label: 'Decision', color: 'text-purple-700', bgColor: 'bg-purple-100', icon: '🎯' },
+  pattern: { label: 'Pattern', color: 'text-blue-700', bgColor: 'bg-blue-100', icon: '🔄' },
+  convention: { label: 'Convention', color: 'text-indigo-700', bgColor: 'bg-indigo-100', icon: '📋' },
+  lesson: { label: 'Lesson', color: 'text-green-700', bgColor: 'bg-green-100', icon: '💡' },
+  architecture: { label: 'Architecture', color: 'text-cyan-700', bgColor: 'bg-cyan-100', icon: '🏗️' },
+  warning: { label: 'Warning', color: 'text-red-700', bgColor: 'bg-red-100', icon: '⚠️' },
+  preference: { label: 'Preference', color: 'text-pink-700', bgColor: 'bg-pink-100', icon: '⭐' },
+};

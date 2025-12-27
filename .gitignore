@@ -25,3 +25,7 @@ npm-debug.log*
 
 # Test coverage
 coverage/
+
+.mcp.json
+
+nul

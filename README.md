@@ -57,20 +57,24 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 ## Project Structure
-
 ```
 kanban/
-├── docs/
-│   └── SPEC.md          # Full project specification
-├── frontend/
-│   ├── src/
-│   │   ├── components/  # React components
-│   │   ├── data/        # Mock data
-│   │   ├── store/       # Zustand store
-│   │   └── types/       # TypeScript types
-│   └── package.json
-└── README.md
+├── agent/               # Autonomous AI agents (PM, Scrum Master, Dev)
+├── frontend/            # React + Vite Web Application
+├── MCP/                 # Model Context Protocol Server for Claude
+├── docs/                # Documentation and Specifications
+│   └── SPEC.md
+└── supabase/            # Database configurations and migrations
 ```
+
+## Getting Started
+
+The system consists of three main parts:
+1. **Frontend**: The visual board
+2. **AI Agents**: Autonomous workers
+3. **MCP Server**: Integration with Claude Desktop
+
+Please refer to the detailed **[SETUP.md](./SETUP.md)** for complete installation instructions.
 
 ## Development
 

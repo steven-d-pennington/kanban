@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type Page = 'board' | 'monitoring' | 'analytics';
+export type Page = 'board' | 'monitoring' | 'analytics' | 'memory';
 
 interface NavigationState {
   currentPage: Page;

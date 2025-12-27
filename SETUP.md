@@ -285,6 +285,51 @@ AI agents can automatically process work items, converting features into PRDs, P
 
 ---
 
+## Setting Up MCP Server (Optional)
+
+The Model Context Protocol (MCP) server allows you to interact with the Kanban board directly from Claude Desktop (or other MCP clients).
+
+### Installation
+
+1. **Navigate to the MCP directory:**
+   ```bash
+   cd MCP
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Build the server:**
+   ```bash
+   npm run build
+   ```
+
+### Configuration
+
+Add the following to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "kanban": {
+      "command": "node",
+      "args": ["c:\\projects\\kanban\\MCP\\dist\\index.js"],
+      "env": {
+        "SUPABASE_URL": "https://your-project.supabase.co",
+        "SUPABASE_SERVICE_ROLE_KEY": "your-service-role-key",
+        "OPENAI_API_KEY": "sk-..." 
+      }
+    }
+  }
+}
+```
+
+> **Note**: `OPENAI_API_KEY` is required for Semantic Search functionality.
+
+---
+
 ## Environment Variables Reference
 
 ### Frontend Variables
