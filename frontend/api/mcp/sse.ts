@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { randomUUID } from 'crypto';
-import { tools } from './tools.js';
 
 // In-memory session store (works within single serverless instance lifetime)
 // For production, consider using Redis or similar for cross-instance sessions
@@ -11,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'OPTIONS') {
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         return res.status(200).end();
     }
 
@@ -30,23 +29,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     sessions.set(sessionId, { created: Date.now() });
 
     // Send initial endpoint event (MCP SSE protocol)
-    const endpointUrl = `/api/mcp/message?sessionId=${sessionId}`;
+    // Use absolute URL for compatibility with remote MCP clients
+    const host = req.headers.host || 'kanban.spennington.dev';
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    const endpointUrl = `${protocol}://${host}/api/mcp/message?sessionId=${sessionId}`;
     res.write(`event: endpoint\ndata: ${endpointUrl}\n\n`);
-
-    // Send server info
-    const serverInfo = {
-        jsonrpc: "2.0",
-        id: 0,
-        result: {
-            protocolVersion: "2024-11-05",
-            capabilities: { tools: {} },
-            serverInfo: {
-                name: "kanban-mcp",
-                version: "1.0.0"
-            }
-        }
-    };
-    res.write(`event: message\ndata: ${JSON.stringify(serverInfo)}\n\n`);
 
     // Keep connection alive with periodic pings
     const pingInterval = setInterval(() => {

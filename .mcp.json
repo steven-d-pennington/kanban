@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "kanban": {
+      "type": "http",
+      "url": "https://kanban.spennington.dev/api/mcp/http"
+    },
+    "kanban-stdio": {
+      "type": "stdio",
+      "command": "C:/Program Files/nodejs/node.exe",
+      "args": ["C:/projects/kanban/MCP/dist/index.js"]
+    }
+  }
+}

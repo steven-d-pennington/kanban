@@ -6,6 +6,7 @@ import {
     ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { supabase } from "./db.js";
+import { memoryToolDefinitions, executeMemoryTool } from "./memory-tools.js";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -315,6 +316,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
                     required: ["work_item_id", "agent_type", "output"],
                 },
             },
+            // Memory/RAG tools
+            ...memoryToolDefinitions,
         ],
     };
 });
@@ -668,6 +671,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     text: `Handoff complete for "${workItem.title}".\n\nCreated ${createdChildren.length} child item(s):\n${createdChildren.map(c => `- ${c.title} (${c.type})`).join('\n')}\n\n${JSON.stringify({ completed_item: work_item_id, child_items: createdChildren.map(c => c.id) }, null, 2)}`,
                 }],
             };
+        }
+
+        // Check if it's a memory tool
+        const memoryTools = ['index_project', 'search_codebase', 'add_memory', 'search_memories', 'recall_context', 'update_index'];
+        if (memoryTools.includes(name)) {
+            return await executeMemoryTool(supabase, name, args || {});
         }
 
         throw new Error(`Unknown tool: ${name}`);
